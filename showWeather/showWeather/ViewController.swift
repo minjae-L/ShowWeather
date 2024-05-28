@@ -11,18 +11,18 @@ class ViewController: UIViewController {
     private let TO_GRID = 0
     private let TO_GPS = 1
     private lazy var collectionView: UICollectionView = {
-        let cv = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
+        let flowlayout = UICollectionViewFlowLayout()
+        flowlayout.scrollDirection = .vertical
+        flowlayout.sectionHeadersPinToVisibleBounds = true
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: flowlayout)
         cv.dataSource = self
         cv.delegate = self
         cv.translatesAutoresizingMaskIntoConstraints = false
         cv.register(CollectionViewCell.self, forCellWithReuseIdentifier: CollectionViewCell.identifier)
+        cv.register(CollectionReusableHeaderView.self,
+                    forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+                    withReuseIdentifier: CollectionReusableHeaderView.identifier)
         return cv
-    }()
-    private let searchBar: UISearchBar = {
-        let sb = UISearchBar()
-        sb.translatesAutoresizingMaskIntoConstraints = false
-        
-        return sb
     }()
     private func configureNavigationBar() {
         let appearance = UINavigationBarAppearance()
@@ -37,15 +37,10 @@ class ViewController: UIViewController {
     }
     private func addViews() {
         view.addSubview(collectionView)
-        view.addSubview(searchBar)
     }
     private func configureLayout() {
         NSLayoutConstraint.activate([
-            searchBar.topAnchor.constraint(equalTo: self.view.layoutMarginsGuide.topAnchor),
-            searchBar.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            searchBar.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            searchBar.heightAnchor.constraint(equalToConstant: 50),
-            collectionView.topAnchor.constraint(equalTo: self.searchBar.bottomAnchor),
+            collectionView.topAnchor.constraint(equalTo: self.view.topAnchor),
             collectionView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
@@ -78,9 +73,28 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
                                                             return UICollectionViewCell()}
         return cell
     }
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        switch kind {
+        case UICollectionView.elementKindSectionHeader:
+            guard let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind,
+                                                                               withReuseIdentifier: CollectionReusableHeaderView.identifier,
+                                                                               for: indexPath)
+                                                                                as? CollectionReusableHeaderView else {
+                                                                                return UICollectionReusableView()}
+            return header
+        case UICollectionView.elementKindSectionFooter:
+            return UICollectionReusableView()
+        default:
+            return UICollectionReusableView()
+        }
+        
+    }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: self.view.frame.width, height: 100)
+    }
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        return CGSize(width: self.view.frame.width, height: 50)
     }
     
 }
