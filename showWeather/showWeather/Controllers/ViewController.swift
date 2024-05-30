@@ -8,8 +8,7 @@
 import UIKit
 
 class ViewController: UIViewController {
-    private let TO_GRID = 0
-    private let TO_GPS = 1
+    private let viewModel = ViewModel()
     private lazy var collectionView: UICollectionView = {
         let flowlayout = UICollectionViewFlowLayout()
         flowlayout.scrollDirection = .vertical
@@ -19,9 +18,7 @@ class ViewController: UIViewController {
         cv.delegate = self
         cv.translatesAutoresizingMaskIntoConstraints = false
         cv.register(CollectionViewCell.self, forCellWithReuseIdentifier: CollectionViewCell.identifier)
-        cv.register(CollectionReusableHeaderView.self,
-                    forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-                    withReuseIdentifier: CollectionReusableHeaderView.identifier)
+        
         return cv
     }()
     private func configureNavigationBar() {
@@ -32,8 +29,14 @@ class ViewController: UIViewController {
         self.navigationItem.scrollEdgeAppearance = appearance
         self.navigationController?.navigationBar.prefersLargeTitles = true
         self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationItem.hidesSearchBarWhenScrolling = false
         self.navigationItem.title = "날씨"
+        let resultViewController = SearchResultViewController()
+        let searchController = UISearchController(searchResultsController: resultViewController)
+        searchController.searchResultsUpdater = resultViewController
+
         
+        self.navigationItem.searchController = searchController
     }
     private func addViews() {
         view.addSubview(collectionView)
@@ -55,7 +58,7 @@ class ViewController: UIViewController {
         configureNavigationBar()
         addViews()
         configureLayout()
-        print(APIManager.shared.convertGRID_GPS(mode: TO_GRID, lat_X: 37.4684021, lng_Y: 126.9340142))
+        print(APIManager.shared.convertGRID_GPS(mode: viewModel.TO_GRID, lat_X: 37.4684021, lng_Y: 126.9340142))
     }
 
 
@@ -73,28 +76,8 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
                                                             return UICollectionViewCell()}
         return cell
     }
-    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        switch kind {
-        case UICollectionView.elementKindSectionHeader:
-            guard let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind,
-                                                                               withReuseIdentifier: CollectionReusableHeaderView.identifier,
-                                                                               for: indexPath)
-                                                                                as? CollectionReusableHeaderView else {
-                                                                                return UICollectionReusableView()}
-            return header
-        case UICollectionView.elementKindSectionFooter:
-            return UICollectionReusableView()
-        default:
-            return UICollectionReusableView()
-        }
-        
-    }
-    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: self.view.frame.width, height: 100)
-    }
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: self.view.frame.width, height: 50)
+        return CGSize(width: self.view.frame.width, height: 70)
     }
     
 }
