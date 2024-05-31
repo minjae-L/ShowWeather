@@ -39,3 +39,6 @@ struct ItemModel: Decodable {
     let fcstTime: String
     let fcstValue: String
 }
+
+
+

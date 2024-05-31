@@ -69,7 +69,9 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let suggestion = completerResults?[indexPath.row] else { return }
-        viewModel.search(for: suggestion)
+        let vc = WeatherViewController()
+        vc.viewModel.completion = suggestion
+        self.present(vc,animated: true)
     }
     
     
