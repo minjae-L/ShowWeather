@@ -9,6 +9,7 @@ import UIKit
 
 final class SearchResultTableViewCell: UITableViewCell {
     static let identifier = "SearchResultTableViewCell"
+//    MARK: UI Property
     private let mainTitleLabel: UILabel = {
         let lb = UILabel()
         lb.font = .boldSystemFont(ofSize: 20)
@@ -23,6 +24,7 @@ final class SearchResultTableViewCell: UITableViewCell {
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
     }()
+//    MARK: Methods
     private func addViews() {
         contentView.addSubview(mainTitleLabel)
         contentView.addSubview(subTitleLabel)

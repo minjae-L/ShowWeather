@@ -9,6 +9,7 @@ import UIKit
 
 class ViewController: UIViewController {
     private let viewModel = ViewModel()
+//    MARK: UI Property
     private lazy var collectionView: UICollectionView = {
         let flowlayout = UICollectionViewFlowLayout()
         flowlayout.scrollDirection = .vertical
@@ -21,6 +22,7 @@ class ViewController: UIViewController {
         
         return cv
     }()
+//    MARK: Methods
     private func configureNavigationBar() {
         let appearance = UINavigationBarAppearance()
         appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
@@ -60,10 +62,9 @@ class ViewController: UIViewController {
         configureLayout()
         print(APIManager.shared.convertGRID_GPS(mode: viewModel.TO_GRID, lat_X: 37.4684021, lng_Y: 126.9340142))
     }
-
-
 }
 
+// MARK: UICollectionView Delegate, DataSource, FlowLayoutDelegate
 extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return 10

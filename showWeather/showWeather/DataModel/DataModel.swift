@@ -7,11 +7,13 @@
 
 import Foundation
 
+// 지역 검색 데이터 모델
 struct SearchDataModel {
     let titleLabel: String
     let subTitleLabel: String?
 }
 
+// 기상청JSON 데이터 모델
 struct WeatherDataModel: Decodable {
     let response: DataResponse
 }

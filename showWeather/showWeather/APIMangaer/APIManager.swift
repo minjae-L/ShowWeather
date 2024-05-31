@@ -7,6 +7,7 @@
 
 import Foundation
 
+// 위도 경도 변환 데이터 모델
 struct LatXLngY {
     public var lat: Double
     public var lng: Double
@@ -16,6 +17,7 @@ struct LatXLngY {
     
 }
 
+// URLSession NetworkError
 enum NetworkError: Error {
     case invalidUrl
     case transportError
@@ -23,10 +25,13 @@ enum NetworkError: Error {
     case missingData
     case decodingError(error: Error)
 }
-    
+
+// APIManager: URLSession, 위도경도변환함수
 class APIManager {
     static let shared = APIManager()
     init() {}
+    
+    // 변환된 x,y좌표의 url파싱
     private func getUrl(nx: Int, ny: Int) -> URLComponents {
         let scheme = "https"
         let host = "apis.data.go.kr"
@@ -52,7 +57,9 @@ class APIManager {
     private let session = URLSession(configuration: .default)
     typealias NetworkResult = (Result<Data, NetworkError>) -> ()
     
+    // URLSession GET Data
     func dataFetch(nx: Int, ny: Int,completion: @escaping NetworkResult) {
+        // URL 확인
         guard let url = getUrl(nx: nx, ny: ny).url else {
             completion(.failure(.invalidUrl))
             return
@@ -62,22 +69,26 @@ class APIManager {
         request.httpMethod = "GET"
         
         let dataTask = session.dataTask(with: request) { data, response, error in
+            // 연결 확인
             guard error == nil else {
                 completion(.failure(.transportError))
                 print(error?.localizedDescription)
                 return
             }
+            // 서버 확인
             let successRange = 200..<300
             guard let statusCode = (response as? HTTPURLResponse)?.statusCode else { return }
             if !successRange.contains(statusCode) {
                 completion(.failure(.serverError(code: statusCode)))
                 return
             }
+            // 데이터 확인
             guard let loadData = data else {
                 completion(.failure(.missingData))
                 return
             }
             print("loadData: \(loadData)")
+            // 디코딩
             do {
                 let parsingData: WeatherDataModel = try
                 JSONDecoder().decode(WeatherDataModel.self, from: loadData)
@@ -88,6 +99,7 @@ class APIManager {
             }
         }.resume()
     }
+    // 위도 경도 변환함수
     func convertGRID_GPS(mode: Int, lat_X: Double, lng_Y: Double) -> LatXLngY {
         let RE = 6371.00877 // 지구 반경(km)
         let GRID = 5.0 // 격자 간격(km)
@@ -165,11 +177,7 @@ class APIManager {
         }
         return rs
         
-        
     }
 
 
 }
-
-//BLSSs%252FqV7vhukX%252Bxy4ts3XEuFU6UVBP6EuwoUxoEkW%252FLMRW27dBTbJXTKUhWeWy9bNidunqwB9Gb8p0Gm3FTRw%253D%253D
-//BLSSs%2FqV7vhukX%2Bxy4ts3XEuFU6UVBP6EuwoUxoEkW%2FLMRW27dBTbJXTKUhWeWy9bNidunqwB9Gb8p0Gm3FTRw%3D%3D

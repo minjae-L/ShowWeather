@@ -13,6 +13,7 @@ class SearchResultViewController: UIViewController {
     private var searchCompleter: MKLocalSearchCompleter?
     private let searchRegion: MKCoordinateRegion = MKCoordinateRegion(MKMapRect.world)
     private var completerResults: [MKLocalSearchCompletion]?
+//    MARK: UI Property
     private lazy var tableView: UITableView = {
         let tv = UITableView()
         tv.dataSource = self
@@ -22,7 +23,7 @@ class SearchResultViewController: UIViewController {
         
         return tv
     }()
-    
+//    MARK: Methods
     private func addViews() {
         self.view.addSubview(tableView)
     }
@@ -52,6 +53,7 @@ class SearchResultViewController: UIViewController {
         searchCompleter = nil
     }
 }
+// MARK: TableView Delegate, Datasource
 extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModel.elementsCount
@@ -72,6 +74,7 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
     
     
 }
+// MARK: UISearchController:: UISearchResultsUpdating
 extension SearchResultViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         guard let text = searchController.searchBar.text else { return }
@@ -83,6 +86,7 @@ extension SearchResultViewController: UISearchResultsUpdating {
     }
 }
 
+// MARK: MKLocalSearchCompleterDelegate
 extension SearchResultViewController: MKLocalSearchCompleterDelegate {
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         completerResults = completer.results
@@ -93,7 +97,7 @@ extension SearchResultViewController: MKLocalSearchCompleterDelegate {
         print(error.localizedDescription)
     }
 }
-
+// MARK: SearchResultViewModelDelegate
 extension SearchResultViewController: SearchResultViewModelDelegate {
     func didChangedElements() {
         DispatchQueue.main.async {
