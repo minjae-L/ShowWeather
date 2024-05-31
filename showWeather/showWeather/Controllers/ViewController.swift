@@ -56,7 +56,7 @@ class ViewController: UIViewController {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = .cyan
+        view.backgroundColor = .white
         configureNavigationBar()
         addViews()
         configureLayout()

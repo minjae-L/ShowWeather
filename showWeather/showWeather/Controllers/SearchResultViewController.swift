@@ -59,7 +59,7 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
         return viewModel.elementsCount
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 100
+        return 70
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: SearchResultTableViewCell.identifier, for: indexPath) as? SearchResultTableViewCell else { return UITableViewCell()}
@@ -71,6 +71,7 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
         guard let suggestion = completerResults?[indexPath.row] else { return }
         let vc = WeatherViewController()
         vc.viewModel.completion = suggestion
+        vc.viewModel.address = viewModel.elements[indexPath.row].titleLabel
         self.present(vc,animated: true)
     }
     

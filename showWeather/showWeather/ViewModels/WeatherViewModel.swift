@@ -7,7 +7,18 @@
 
 import Foundation
 import MapKit
-
+/*
+ date: 날짜
+ temp: 기온
+ rainAmount: 강수량
+ rainType: 강수형태(비, 눈, 빗방울)
+ skyInfo: 하늘상태(맑음, 구름많음, 흐림)
+ humidity: 습도
+ wind: 풍속
+ */
+protocol WeatherViewModelDelegate: AnyObject {
+    func didUpdatedElements()
+}
 struct WeatherModel {
     let date: String
     var temp: String?
@@ -21,8 +32,14 @@ class WeatherViewModel {
     var elements: [WeatherModel] = [] {
         didSet {
             print("WVM:: elements didSet")
+            var allLoaded = false
+            if elements[0].wind != nil {
+                delegate?.didUpdatedElements()
+            }
         }
     }
+    weak var delegate: WeatherViewModelDelegate?
+    var address: String = ""
     var completion: MKLocalSearchCompletion? = nil {
         didSet {
             guard let completion = self.completion else { return }

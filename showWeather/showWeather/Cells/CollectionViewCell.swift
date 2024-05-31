@@ -11,7 +11,6 @@ class CollectionViewCell: UICollectionViewCell {
     static let identifier = "CollectionViewCell"
     override init(frame: CGRect) {
         super.init(frame: .zero)
-        self.contentView.backgroundColor = .brown
     }
     
     required init?(coder: NSCoder) {
