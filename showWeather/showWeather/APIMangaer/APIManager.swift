@@ -43,14 +43,26 @@ class APIManager {
         components.host = host
         components.path = path
         
+        // 현재날짜와 시간 구하기
+        let now = Date()
+        let dateFormatter = DateFormatter()
+        let timeFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd"
+        timeFormatter.dateFormat = "HHmm"
+        let baseDate = dateFormatter.string(from: now)
+        let baseTime = timeFormatter.string(from: now)
+        print("current: \(dateFormatter.string(from: now))")
+        print("current: \(timeFormatter.string(from: now))")
+        
+        // 총 데이터수는 60개지만 1회호출로 가져올 수 있는 데이터의 최대갯수는 50개이므로 두번 걸쳐서 받기위해 URLComponents를 배열로 담아서 리턴
         for i in 1...2 {
             components.percentEncodedQueryItems = [
                 URLQueryItem(name: "serviceKey", value: "BLSSs%2FqV7vhukX%2Bxy4ts3XEuFU6UVBP6EuwoUxoEkW%2FLMRW27dBTbJXTKUhWeWy9bNidunqwB9Gb8p0Gm3FTRw%3D%3D"),
                 URLQueryItem(name: "numOfRows", value: "30"),
                 URLQueryItem(name: "pageNo", value: String(i)),
                 URLQueryItem(name: "dataType", value: "JSON"),
-                URLQueryItem(name: "base_date", value: "20240530"),
-                URLQueryItem(name: "base_time", value: "1700"),
+                URLQueryItem(name: "base_date", value: baseDate),
+                URLQueryItem(name: "base_time", value: baseTime),
                 URLQueryItem(name: "nx", value: String(nx)),
                 URLQueryItem(name: "ny", value: String(ny))
             ]
