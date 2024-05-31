@@ -16,12 +16,78 @@ struct LatXLngY {
     
 }
 
-
+enum NetworkError: Error {
+    case invalidUrl
+    case transportError
+    case serverError(code: Int)
+    case missingData
+    case decodingError(error: Error)
+}
     
 class APIManager {
     static let shared = APIManager()
     init() {}
+    private func getUrl(nx: Int, ny: Int) -> URLComponents {
+        let scheme = "https"
+        let host = "apis.data.go.kr"
+        let path = "/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst"
+        
+        var components = URLComponents()
+        components.scheme = scheme
+        components.host = host
+        components.path = path
+        components.percentEncodedQueryItems = [
+            URLQueryItem(name: "serviceKey", value: "BLSSs%2FqV7vhukX%2Bxy4ts3XEuFU6UVBP6EuwoUxoEkW%2FLMRW27dBTbJXTKUhWeWy9bNidunqwB9Gb8p0Gm3FTRw%3D%3D"),
+            URLQueryItem(name: "numOfRows", value: "50"),
+            URLQueryItem(name: "pageNo", value: "1"),
+            URLQueryItem(name: "dataType", value: "JSON"),
+            URLQueryItem(name: "base_date", value: "20240530"),
+            URLQueryItem(name: "base_time", value: "1700"),
+            URLQueryItem(name: "nx", value: "126"),
+            URLQueryItem(name: "ny", value: "33")
+        ]
+        return components
+    }
     
+    private let session = URLSession(configuration: .default)
+    typealias NetworkResult = (Result<Data, NetworkError>) -> ()
+    
+    func dataFetch(nx: Int, ny: Int,completion: @escaping NetworkResult) {
+        guard let url = getUrl(nx: nx, ny: ny).url else {
+            completion(.failure(.invalidUrl))
+            return
+        }
+        print("APIManager:: URL: \(url)")
+        var request: URLRequest = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        let dataTask = session.dataTask(with: request) { data, response, error in
+            guard error == nil else {
+                completion(.failure(.transportError))
+                print(error?.localizedDescription)
+                return
+            }
+            let successRange = 200..<300
+            guard let statusCode = (response as? HTTPURLResponse)?.statusCode else { return }
+            if !successRange.contains(statusCode) {
+                completion(.failure(.serverError(code: statusCode)))
+                return
+            }
+            guard let loadData = data else {
+                completion(.failure(.missingData))
+                return
+            }
+            print("loadData: \(loadData)")
+            do {
+                let parsingData: WeatherDataModel = try
+                JSONDecoder().decode(WeatherDataModel.self, from: loadData)
+                print(parsingData)
+                completion(.success(loadData))
+            } catch let error {
+                completion(.failure(.decodingError(error: error)))
+            }
+        }.resume()
+    }
     func convertGRID_GPS(mode: Int, lat_X: Double, lng_Y: Double) -> LatXLngY {
         let RE = 6371.00877 // 지구 반경(km)
         let GRID = 5.0 // 격자 간격(km)
@@ -104,3 +170,6 @@ class APIManager {
 
 
 }
+
+//BLSSs%252FqV7vhukX%252Bxy4ts3XEuFU6UVBP6EuwoUxoEkW%252FLMRW27dBTbJXTKUhWeWy9bNidunqwB9Gb8p0Gm3FTRw%253D%253D
+//BLSSs%2FqV7vhukX%2Bxy4ts3XEuFU6UVBP6EuwoUxoEkW%2FLMRW27dBTbJXTKUhWeWy9bNidunqwB9Gb8p0Gm3FTRw%3D%3D

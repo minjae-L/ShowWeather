@@ -67,6 +67,25 @@ class SearchResultViewModel {
             }
             let places = response?.mapItems[0]
             print(places?.placemark.coordinate)
+            guard let lati = places?.placemark.coordinate.latitude, let long = places?.placemark.coordinate.longitude else { return }
+            let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
+            print("converted: \(location)")
+            APIManager.shared.dataFetch(nx: location.x, ny: location.y) { result in
+                switch result {
+                case .success(let data):
+                    print(data)
+                case .failure(.decodingError(error: let error)):
+                    print("decodingError: \(error.localizedDescription)")
+                case .failure(.invalidUrl):
+                    print("invalidURL")
+                case .failure(.missingData):
+                    print("missingData")
+                case .failure(.serverError(code: let code)):
+                    print("serverError \(code)")
+                case .failure(.transportError):
+                    print("transportError")
+                }
+            }
         }
     }
 }
