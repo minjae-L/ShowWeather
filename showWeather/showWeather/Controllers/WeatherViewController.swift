@@ -13,7 +13,7 @@ class WeatherViewController: UIViewController {
     private let addressLabel: UILabel = {
         let lb = UILabel()
         lb.translatesAutoresizingMaskIntoConstraints = false
-        lb.font = .boldSystemFont(ofSize: 20)
+        lb.font = .boldSystemFont(ofSize: 40)
         return lb
     }()
     private let temperatureLabel: UILabel = {
@@ -22,10 +22,12 @@ class WeatherViewController: UIViewController {
         lb.font = .boldSystemFont(ofSize: 80)
         return lb
     }()
-    private let skyInfoLabel: UILabel = {
-        let lb = UILabel()
-        lb.translatesAutoresizingMaskIntoConstraints = false
-        return lb
+    private let skyImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        iv.contentMode = .scaleAspectFit
+        
+        return iv
     }()
     private let rainTypeLabel: UILabel = {
         let lb = UILabel()
@@ -50,7 +52,7 @@ class WeatherViewController: UIViewController {
     private let contentStackView: UIStackView = {
         let sv = UIStackView()
         sv.axis = .vertical
-        sv.distribution = .fillProportionally
+        sv.distribution = .fillEqually
         sv.alignment = .center
         sv.translatesAutoresizingMaskIntoConstraints = false
         return sv
@@ -83,6 +85,8 @@ class WeatherViewController: UIViewController {
         
         return cv
     }()
+    
+//    MARK: Methods
     private func addViews() {
         rainStackView.addArrangedSubview(rainTypeLabel)
         rainStackView.addArrangedSubview(rainAmountLabel)
@@ -90,7 +94,7 @@ class WeatherViewController: UIViewController {
         humidityStackView.addArrangedSubview(humidity)
         contentStackView.addArrangedSubview(addressLabel)
         contentStackView.addArrangedSubview(temperatureLabel)
-        contentStackView.addArrangedSubview(skyInfoLabel)
+        contentStackView.addArrangedSubview(skyImageView)
         contentStackView.addArrangedSubview(rainStackView)
         contentStackView.addArrangedSubview(humidityStackView)
         view.addSubview(contentStackView)
@@ -98,31 +102,50 @@ class WeatherViewController: UIViewController {
     }
     private func configureLayout() {
         NSLayoutConstraint.activate([
-            
-            collectionView.heightAnchor.constraint(equalToConstant: self.view.frame.height/3),
-            collectionView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor,constant: 20),
-            collectionView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20),
-            collectionView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor,constant: -20),
-            contentStackView.topAnchor.constraint(equalTo: self.view.topAnchor),
+            contentStackView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 50),
             contentStackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
             contentStackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            contentStackView.bottomAnchor.constraint(equalTo: collectionView.topAnchor),
+            contentStackView.bottomAnchor.constraint(equalTo: collectionView.topAnchor, constant: -20),
+            collectionView.heightAnchor.constraint(equalToConstant: 200),
+            collectionView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor,constant: 20),
+            collectionView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20),
+            collectionView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor,constant: -50),
+
         ])
     }
+    // 날씨 정보로 UI 그리기
     private func configureTexts() {
-        guard let element = viewModel.elements.first,let windLabel = element.wind, let humidityLabel = element.humidity else {return}
+        guard let element = viewModel.elements.first,
+              let windLabel = element.wind,
+              let humidityLabel = element.humidity,
+              let tempText = element.temp
+        else {return}
+        
+        // 주소 라벨
+        if viewModel.address.count > 7 {
+            self.addressLabel.font = .boldSystemFont(ofSize: 20)
+        } else {
+            self.addressLabel.font = .boldSystemFont(ofSize: 40)
+        }
         self.addressLabel.text = viewModel.address
-        self.temperatureLabel.text = element.temp
+        
+        // 온도 라벨
+        self.temperatureLabel.text = "\(tempText)°"
+        
+        // 하늘 이미지 뷰
+        let imageConfig = UIImage.SymbolConfiguration(pointSize: 40, weight: .regular)
         switch element.skyInfo {
         case "1":
-            self.skyInfoLabel.text = "맑음"
+            self.skyImageView.image = UIImage(systemName: "sun.max.fill",withConfiguration: imageConfig)
         case "3":
-            self.skyInfoLabel.text = "구름많음"
+            self.skyImageView.image = UIImage(systemName: "cloud.sun.fill",withConfiguration: imageConfig)
         case "4":
-            self.skyInfoLabel.text = "흐림"
+            self.skyImageView.image = UIImage(systemName: "cloud.rain.fill",withConfiguration: imageConfig)
         default:
             break
         }
+        
+        // 강수형태 라벨
         switch element.rainType {
         case "0":
             self.rainTypeLabel.text = ""
@@ -141,6 +164,8 @@ class WeatherViewController: UIViewController {
         default:
             break
         }
+        
+        // 강수량 라벨
         switch element.rainAmount {
         case "0":
             self.rainAmountLabel.text = ""
@@ -149,8 +174,11 @@ class WeatherViewController: UIViewController {
         default:
             self.rainAmountLabel.text = element.rainAmount
         }
-//        guard let windLabel = element.wind, let humidityLabel = element.humidity else { return }
+        
+        // 바람 라벨
         self.windLabel.text = "풍속: \(windLabel)m/s"
+        
+        // 습도 라벨
         self.humidity.text = "습도: \(humidityLabel)%"
     }
     override func viewDidLoad() {
@@ -163,10 +191,10 @@ class WeatherViewController: UIViewController {
     
 }
 
-
+// MARK: CollectionView Delegate, DataSource, DelegateFlowLayout
 extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 20
+        return viewModel.elements.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -174,22 +202,20 @@ extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataS
                                                             for: indexPath)
                                                             as? WeatherCollectionViewCell else
                                                             { return UICollectionViewCell() }
-        
+        cell.configure(model: viewModel.elements[indexPath.row])
         return cell
     }
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 70, height: self.view.frame.height)
+        return CGSize(width: 70, height: self.collectionView.frame.height)
     }
 }
 
+// MARK: WeatherViewModelDelegate
 extension WeatherViewController: WeatherViewModelDelegate {
     func didUpdatedElements() {
-        
         DispatchQueue.main.async {
             self.configureTexts()
-            
+            self.collectionView.reloadData()
         }
     }
-    
-    
 }
