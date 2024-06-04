@@ -7,27 +7,11 @@
 
 import Foundation
 import MapKit
-/*
- date: 날짜
- temp: 기온
- rainAmount: 강수량
- rainType: 강수형태(비, 눈, 빗방울)
- skyInfo: 하늘상태(맑음, 구름많음, 흐림)
- humidity: 습도
- wind: 풍속
- */
+
 protocol WeatherViewModelDelegate: AnyObject {
     func didUpdatedElements()
 }
-struct WeatherModel {
-    let date: String
-    var temp: String?
-    var rainAmount: String?
-    var rainType: String?
-    var skyInfo: String?
-    var humidity: String?
-    var wind: String?
-}
+
 class WeatherViewModel {
     var elements: [WeatherModel] = [] {
         didSet {
@@ -40,13 +24,18 @@ class WeatherViewModel {
     }
     weak var delegate: WeatherViewModelDelegate?
     var address: String = ""
+    // 지역 검색후 선택시 초기화된다.
+    // 초기화되면 선택된 지역의 위도 경도 값을 불러옴 (search)
     var completion: MKLocalSearchCompletion? = nil {
         didSet {
             guard let completion = self.completion else { return }
             self.search(for: completion)
         }
     }
-    func convertDate(date: String, n: Int) -> String{
+    
+    // 날짜를 문자열 형식으로 변환
+    // 현재시간 기준으로 6시간후 까지 날씨정보를 불러오기 위함
+    private func convertDate(date: String, n: Int) -> String{
         var num = Int(date)! + 100 * n
         if num >= 2400 {
             return String(num - 2400)
@@ -54,7 +43,8 @@ class WeatherViewModel {
             return String(num)
         }
     }
-    func convertDataFromCategory(response: WeatherDataModel) {
+    // JSON 데이터모델을 WeatherModel로 변환하여 저장
+    private func convertDataFromCategory(response: WeatherDataModel) {
         var converted: [WeatherModel] = []
         if self.elements.isEmpty {
             guard var fcstTime = response.response.body?.items.item[0].fcstTime else { return }
@@ -114,6 +104,7 @@ class WeatherViewModel {
             let places = response?.mapItems[0]
             print(places?.placemark.coordinate)
             guard let lati = places?.placemark.coordinate.latitude, let long = places?.placemark.coordinate.longitude else { return }
+            // 불러온 위도 경도를 x좌표,y좌표로 변환
             let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
             print("converted: \(location)")
             // URLSesison을 통한 네트워크 통신
