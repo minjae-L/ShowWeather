@@ -45,14 +45,15 @@ class APIManager {
         
         // 현재날짜와 시간 구하기
         let now = Date()
+        let before = Calendar.current.date(byAdding: .minute, value: -30, to: now)!
         let dateFormatter = DateFormatter()
         let timeFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd"
         timeFormatter.dateFormat = "HHmm"
         let baseDate = dateFormatter.string(from: now)
-        let baseTime = timeFormatter.string(from: now)
+        let baseTime = timeFormatter.string(from: before)
         print("current: \(dateFormatter.string(from: now))")
-        print("current: \(timeFormatter.string(from: now))")
+        print("current: \(timeFormatter.string(from: before))")
         
         // 총 데이터수는 60개지만 1회호출로 가져올 수 있는 데이터의 최대갯수는 50개이므로 두번 걸쳐서 받기위해 URLComponents를 배열로 담아서 리턴
         for i in 1...2 {
