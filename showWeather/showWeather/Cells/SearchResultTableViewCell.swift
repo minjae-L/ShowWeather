@@ -31,14 +31,14 @@ final class SearchResultTableViewCell: UITableViewCell {
     }
     private func configureLayout() {
         NSLayoutConstraint.activate([
-            mainTitleLabel.topAnchor.constraint(equalTo: self.contentView.topAnchor, constant: 15),
-            mainTitleLabel.heightAnchor.constraint(equalToConstant: 30),
-            mainTitleLabel.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 5),
+            mainTitleLabel.topAnchor.constraint(equalTo: self.contentView.topAnchor, constant: 10),
+            mainTitleLabel.heightAnchor.constraint(equalToConstant: 20),
+            mainTitleLabel.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 20),
             mainTitleLabel.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -5),
             subTitleLabel.topAnchor.constraint(equalTo: self.mainTitleLabel.bottomAnchor, constant: 5),
-            subTitleLabel.heightAnchor.constraint(equalToConstant: 15),
-            subTitleLabel.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 5),
+            subTitleLabel.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 20),
             subTitleLabel.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -5),
+            subTitleLabel.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor, constant: -5),
         ])
     }
     func configure(model: SearchDataModel) {

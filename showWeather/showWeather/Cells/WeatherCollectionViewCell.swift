@@ -56,9 +56,6 @@ class WeatherCollectionViewCell: UICollectionViewCell {
             contentStackView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor),
         ])
     }
-    private func configureColor() {
-        
-    }
     private func configureTimeToHour(dateString: String) -> String {
         if dateString.count == 3 {
             let hour = dateString.prefix(1)
