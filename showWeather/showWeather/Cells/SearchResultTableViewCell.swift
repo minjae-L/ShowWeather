@@ -42,8 +42,8 @@ final class SearchResultTableViewCell: UITableViewCell {
         ])
     }
     func configure(model: SearchDataModel) {
-        self.mainTitleLabel.text = model.titleLabel
-        self.subTitleLabel.text = model.subTitleLabel
+        self.mainTitleLabel.text = model.addressLabel
+        self.subTitleLabel.text = model.detailAddressLabel
     }
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .default, reuseIdentifier: SearchResultTableViewCell.identifier)

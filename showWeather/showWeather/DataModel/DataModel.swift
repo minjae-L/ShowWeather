@@ -9,8 +9,8 @@ import Foundation
 
 // 지역 검색 데이터 모델
 struct SearchDataModel {
-    let titleLabel: String
-    let subTitleLabel: String?
+    let addressLabel: String
+    let detailAddressLabel: String?
 }
 // 날씨정보 데이터 모델(Weather VC에 뿌려질 데이터)
 /*

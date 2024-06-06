@@ -31,7 +31,7 @@ class SearchResultViewModel {
         guard let data = arr else { return }
         var converted: [SearchDataModel] = []
         for element in data {
-            converted.append(SearchDataModel(titleLabel: element.title, subTitleLabel: element.subtitle))
+            converted.append(SearchDataModel(addressLabel: element.title, detailAddressLabel: element.subtitle))
         }
         elements = converted
     }

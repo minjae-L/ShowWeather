@@ -9,7 +9,7 @@ import UIKit
 
 class WeatherViewController: UIViewController {
 //    MARK: UI Property
-    let viewModel = WeatherViewModel()
+    var viewModel = WeatherViewModel()
     private let addressLabel: UILabel = {
         let lb = UILabel()
         lb.translatesAutoresizingMaskIntoConstraints = false

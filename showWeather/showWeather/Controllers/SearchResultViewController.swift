@@ -71,7 +71,7 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
         guard let suggestion = completerResults?[indexPath.row] else { return }
         let vc = WeatherViewController()
         vc.viewModel.completion = suggestion
-        vc.viewModel.address = viewModel.elements[indexPath.row].titleLabel
+        vc.viewModel.address = viewModel.elements[indexPath.row].addressLabel
         self.present(vc,animated: true)
     }
     
