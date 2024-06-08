@@ -25,7 +25,8 @@ class ViewController: UIViewController {
 //    MARK: Methods
     private func configureNavigationBar() {
         let appearance = UINavigationBarAppearance()
-        appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
+        appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor(named: "LabelTextColor")]
+        appearance.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
         self.navigationItem.largeTitleDisplayMode = .always
         self.navigationItem.standardAppearance = appearance
         self.navigationItem.scrollEdgeAppearance = appearance
@@ -52,15 +53,14 @@ class ViewController: UIViewController {
         ])
     }
     private func configureColor() {
-        
+        self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+        self.collectionView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
         configureNavigationBar()
         addViews()
         configureLayout()
-        print(APIManager.shared.convertGRID_GPS(mode: viewModel.TO_GRID, lat_X: 37.4684021, lng_Y: 126.9340142))
     }
 }
 
@@ -75,6 +75,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
                                                             for: indexPath)
                                                             as? CollectionViewCell else {
                                                             return UICollectionViewCell()}
+        cell.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
         return cell
     }
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {

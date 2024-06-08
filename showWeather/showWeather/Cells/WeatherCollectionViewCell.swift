@@ -12,7 +12,6 @@ class WeatherCollectionViewCell: UICollectionViewCell {
     private let dateLabel: UILabel = {
         let lb = UILabel()
         lb.translatesAutoresizingMaskIntoConstraints = false
-        lb.textColor = .black
         lb.font = .systemFont(ofSize: 15)
         lb.textAlignment = .center
         return lb
@@ -20,7 +19,6 @@ class WeatherCollectionViewCell: UICollectionViewCell {
     private let tempLabel: UILabel = {
         let lb = UILabel()
         lb.translatesAutoresizingMaskIntoConstraints = false
-        lb.textColor = .black
         lb.font = .systemFont(ofSize: 20)
         lb.textAlignment = .center
         
@@ -30,7 +28,7 @@ class WeatherCollectionViewCell: UICollectionViewCell {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .systemBlue
+        
         return imageView
     }()
     private let contentStackView: UIStackView = {
@@ -55,6 +53,12 @@ class WeatherCollectionViewCell: UICollectionViewCell {
             contentStackView.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor),
             contentStackView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor),
         ])
+    }
+    private func congifureColor() {
+        self.dateLabel.textColor = UIColor(named: "LabelTextColor")
+        self.tempLabel.textColor = UIColor(named: "LabelTextColor")
+        self.skyImageView.tintColor = .systemBlue
+        self.contentView.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
     }
     private func configureTimeToHour(dateString: String) -> String {
         if dateString.count == 3 {
@@ -89,6 +93,7 @@ class WeatherCollectionViewCell: UICollectionViewCell {
         super.init(frame: .zero)
         addViews()
         configureLayout()
+        congifureColor()
     }
     
     required init?(coder: NSCoder) {

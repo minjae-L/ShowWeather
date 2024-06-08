@@ -113,6 +113,19 @@ class WeatherViewController: UIViewController {
 
         ])
     }
+    private func configureColor() {
+        self.addressLabel.textColor = UIColor(named: "LabelTextColor")
+        self.temperatureLabel.textColor = UIColor(named: "LabelTextColor")
+        self.rainTypeLabel.textColor = UIColor(named: "LabelTextColor")
+        self.rainAmountLabel.textColor = UIColor(named: "LabelTextColor")
+        self.windLabel.textColor = UIColor(named: "LabelTextColor")
+        self.humidity.textColor = UIColor(named: "LabelTextColor")
+        self.contentStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+        self.rainStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+        self.humidityStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+        self.collectionView.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
+        self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+    }
     // 날씨 정보로 UI 그리기
     private func configureTexts() {
         guard let element = viewModel.elements.first,
@@ -185,7 +198,7 @@ class WeatherViewController: UIViewController {
         super.viewDidLoad()
         addViews()
         configureLayout()
-        view.backgroundColor = .white
+        configureColor()
         viewModel.delegate = self
     }
     

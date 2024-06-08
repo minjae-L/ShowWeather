@@ -13,14 +13,12 @@ final class SearchResultTableViewCell: UITableViewCell {
     private let mainTitleLabel: UILabel = {
         let lb = UILabel()
         lb.font = .boldSystemFont(ofSize: 20)
-        lb.textColor = .black
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
     }()
     private let subTitleLabel: UILabel = {
         let lb = UILabel()
         lb.font = .systemFont(ofSize: 15)
-        lb.textColor = .lightGray
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
     }()
@@ -41,6 +39,11 @@ final class SearchResultTableViewCell: UITableViewCell {
             subTitleLabel.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor, constant: -5),
         ])
     }
+    private func configureColor() {
+        mainTitleLabel.textColor = UIColor(named: "LabelTextColor")
+        subTitleLabel.textColor = .lightGray
+        self.contentView.backgroundColor = UIColor(named: "TableViewCellBackgroundColor")
+    }
     func configure(model: SearchDataModel) {
         self.mainTitleLabel.text = model.addressLabel
         self.subTitleLabel.text = model.detailAddressLabel
@@ -49,13 +52,13 @@ final class SearchResultTableViewCell: UITableViewCell {
         super.init(style: .default, reuseIdentifier: SearchResultTableViewCell.identifier)
         addViews()
         configureLayout()
+        configureColor()
     }
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     override func awakeFromNib() {
         super.awakeFromNib()
-        
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {

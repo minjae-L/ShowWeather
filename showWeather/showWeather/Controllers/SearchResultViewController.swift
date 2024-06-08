@@ -36,7 +36,8 @@ class SearchResultViewController: UIViewController {
         ])
     }
     private func configureColor() {
-        tableView.backgroundColor = .blue
+        self.tableView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+        self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
     }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -64,6 +65,7 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: SearchResultTableViewCell.identifier, for: indexPath) as? SearchResultTableViewCell else { return UITableViewCell()}
         cell.configure(model: viewModel.elements[indexPath.row])
+        cell.backgroundColor = UIColor(named: "TableViewCellBackgroundColor")
         return cell
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
