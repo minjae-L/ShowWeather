@@ -76,10 +76,13 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
                                                             as? CollectionViewCell else {
                                                             return UICollectionViewCell()}
         cell.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
+        cell.clipsToBounds = true
+        cell.layer.cornerRadius = 10
         return cell
     }
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: self.view.frame.width, height: 70)
+        let width = self.view.frame.width
+        return CGSize(width: width - 40, height: 70)
     }
     
 }

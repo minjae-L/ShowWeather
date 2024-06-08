@@ -82,7 +82,8 @@ class WeatherViewController: UIViewController {
         cv.delegate = self
         cv.dataSource = self
         cv.register(WeatherCollectionViewCell.self, forCellWithReuseIdentifier: WeatherCollectionViewCell.identifier)
-        
+        cv.clipsToBounds = true
+        cv.layer.cornerRadius = 10
         return cv
     }()
     
