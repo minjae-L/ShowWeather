@@ -20,7 +20,7 @@ class SearchResultViewController: UIViewController {
         tv.delegate = self
         tv.translatesAutoresizingMaskIntoConstraints = false
         tv.register(SearchResultTableViewCell.self, forCellReuseIdentifier: SearchResultTableViewCell.identifier)
-        
+        tv.estimatedRowHeight = 50
         return tv
     }()
 //    MARK: Methods
@@ -36,7 +36,8 @@ class SearchResultViewController: UIViewController {
         ])
     }
     private func configureColor() {
-        tableView.backgroundColor = .blue
+        self.tableView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+        self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
     }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -59,17 +60,22 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
         return viewModel.elementsCount
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 100
+        return UITableView.automaticDimension
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: SearchResultTableViewCell.identifier, for: indexPath) as? SearchResultTableViewCell else { return UITableViewCell()}
         cell.configure(model: viewModel.elements[indexPath.row])
+        cell.backgroundColor = UIColor(named: "TableViewCellBackgroundColor")
         return cell
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let suggestion = completerResults?[indexPath.row] else { return }
-        viewModel.search(for: suggestion)
+        let root = WeatherViewController()
+        root.viewModel.completion = suggestion
+        root.viewModel.address = viewModel.elements[indexPath.row].addressLabel
+        let vc = UINavigationController(rootViewController: root)
+        self.present(vc,animated: true)
     }
     
     
