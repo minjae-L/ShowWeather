@@ -88,6 +88,16 @@ class WeatherViewController: UIViewController {
     }()
     
 //    MARK: Methods
+    private func configureNavigationBar() {
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "취소", image: nil, target: self, action: #selector(cancelButtonTapped))
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "추가", image: nil, target: self, action: #selector(addLocationWeather))
+    }
+    @objc func addLocationWeather() {
+        print("addLocationWeather")
+    }
+    @objc func cancelButtonTapped() {
+        self.dismiss(animated: true)
+    }
     private func addViews() {
         rainStackView.addArrangedSubview(rainTypeLabel)
         rainStackView.addArrangedSubview(rainAmountLabel)
@@ -200,6 +210,7 @@ class WeatherViewController: UIViewController {
         addViews()
         configureLayout()
         configureColor()
+        configureNavigationBar()
         viewModel.delegate = self
     }
     
