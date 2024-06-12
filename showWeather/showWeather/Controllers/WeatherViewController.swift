@@ -94,6 +94,7 @@ class WeatherViewController: UIViewController {
     }
     @objc func addLocationWeather() {
         print("addLocationWeather")
+        print(viewModel.getLocationDataModel())
     }
     @objc func cancelButtonTapped() {
         self.dismiss(animated: true)

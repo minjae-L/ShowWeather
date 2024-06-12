@@ -6,7 +6,11 @@
 //
 
 import Foundation
-
+// 저장된 지역의 날씨 모델
+struct LocationWeatherDataModel {
+    let address: String
+    let location: (nx: String, ny: String)
+}
 // 지역 검색 데이터 모델
 struct SearchDataModel {
     let addressLabel: String
@@ -58,6 +62,3 @@ struct ItemModel: Decodable {
     let fcstTime: String
     let fcstValue: String
 }
-
-
-
