@@ -25,6 +25,7 @@ class ViewModel {
     }
     
     private func fetchData(data: [LocationWeatherDataModel]) {
+        var arr: [SavedWeatherDataModel] = []
         for dm in data {
             let nx = Int(dm.location.nx)!
             let ny = Int(dm.location.ny)!
@@ -35,7 +36,8 @@ class ViewModel {
                 case .success(let data):
                     if let converted = self.convertData(address: dm.address, data: data) {
                         print("converted success")
-                        savedWeathers.append(converted)
+                        arr.append(converted)
+                        self.savedWeathers = arr
                     }
                 case .failure(.decodingError(error: let error)):
                     print("decodingError: \(error)")
@@ -50,6 +52,7 @@ class ViewModel {
                 }
             }
         }
+        
     }
     private func convertData(address: String, data: WeatherDataModel) -> SavedWeatherDataModel? {
         guard let fcstTime = data.response.body?.items.item[0].fcstTime else { return nil}

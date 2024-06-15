@@ -76,7 +76,7 @@ class ViewController: UIViewController {
 // MARK: UICollectionView Delegate, DataSource, FlowLayoutDelegate
 extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 5
+        return viewModel.savedWeathers.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -87,6 +87,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
         cell.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
         cell.clipsToBounds = true
         cell.layer.cornerRadius = 10
+        cell.configure(model: viewModel.savedWeathers[indexPath.row])
         return cell
     }
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {

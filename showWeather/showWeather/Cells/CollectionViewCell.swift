@@ -110,6 +110,15 @@ class CollectionViewCell: UICollectionViewCell {
         rainAmountLabel.textColor = UIColor(named: "LabelTextColor")
         
     }
+    func configure(model: SavedWeatherDataModel) {
+        self.addressLabel.text = model.address
+        self.skyInfoLabel.text = model.skyInfo
+        self.temperatureLabel.text = model.temperature
+        self.rainAmountLabel.text = model.rainAmount
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        self.timeStampLabel.text = dateFormatter.string(from: Date())
+    }
     override init(frame: CGRect) {
         super.init(frame: .zero)
         self.addViews()
