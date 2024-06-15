@@ -6,7 +6,6 @@
 //
 
 import Foundation
-//import CoreLocation
 import MapKit
 
 // 셀 자동완성 검색을 위한 Delegate
@@ -34,5 +33,8 @@ class SearchResultViewModel {
             converted.append(SearchDataModel(addressLabel: element.title, detailAddressLabel: element.subtitle))
         }
         elements = converted
+    }
+    func removeAllElements() {
+        self.elements.removeAll()
     }
 }

@@ -41,17 +41,23 @@ class SearchResultViewController: UIViewController {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("SearchResultViewController ViewdidLoad")
-        searchCompleter = MKLocalSearchCompleter()
-        searchCompleter?.delegate = self
-        searchCompleter?.region = searchRegion
-        viewModel.delegate = self
         addViews()
         configureLayout()
+        print("SearchResultViewController ViewdidLoad")
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        print("SRVC viewWillAppear")
+        searchCompleter = MKLocalSearchCompleter()
+        searchCompleter?.region = searchRegion
+        searchCompleter?.delegate = self
+        viewModel.delegate = self
     }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+        print("SRVC viewDidDisappear")
         searchCompleter = nil
+        completerResults = nil
+        viewModel.removeAllElements()
     }
 }
 // MARK: TableView Delegate, Datasource
@@ -72,12 +78,12 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
         tableView.deselectRow(at: indexPath, animated: true)
         guard let suggestion = completerResults?[indexPath.row] else { return }
         let root = WeatherViewController()
+        root.delegate = self
         root.viewModel.completion = suggestion
         root.viewModel.address = viewModel.elements[indexPath.row].addressLabel
         let vc = UINavigationController(rootViewController: root)
         self.present(vc,animated: true)
     }
-    
     
 }
 // MARK: UISearchController:: UISearchResultsUpdating
@@ -108,6 +114,16 @@ extension SearchResultViewController: SearchResultViewModelDelegate {
     func didChangedElements() {
         DispatchQueue.main.async {
             self.tableView.reloadData()
+        }
+    }
+}
+
+extension SearchResultViewController: WeatherViewControllerDelegate {
+    func addButtonTapped() {
+        print("WVC Delegate")
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+            self.dismiss(animated: false)
         }
     }
 }

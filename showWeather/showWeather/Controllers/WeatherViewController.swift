@@ -6,10 +6,14 @@
 //
 
 import UIKit
-
+protocol WeatherViewControllerDelegate: AnyObject {
+    func addButtonTapped()
+    
+}
 class WeatherViewController: UIViewController {
 //    MARK: UI Property
     var viewModel = WeatherViewModel()
+    weak var delegate: WeatherViewControllerDelegate?
     private let addressLabel: UILabel = {
         let lb = UILabel()
         lb.translatesAutoresizingMaskIntoConstraints = false
@@ -95,6 +99,8 @@ class WeatherViewController: UIViewController {
     @objc func addLocationWeather() {
         print("addLocationWeather")
         print(viewModel.getLocationDataModel())
+        delegate?.addButtonTapped()
+        self.dismiss(animated: true)
     }
     @objc func cancelButtonTapped() {
         self.dismiss(animated: true)

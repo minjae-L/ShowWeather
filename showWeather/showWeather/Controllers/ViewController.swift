@@ -37,8 +37,6 @@ class ViewController: UIViewController {
         let resultViewController = SearchResultViewController()
         let searchController = UISearchController(searchResultsController: resultViewController)
         searchController.searchResultsUpdater = resultViewController
-
-        
         self.navigationItem.searchController = searchController
     }
     private func addViews() {
@@ -61,6 +59,12 @@ class ViewController: UIViewController {
         configureNavigationBar()
         addViews()
         configureLayout()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        print("VC viewWillAppear")
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        print("ViewController viewWillDisappear")
     }
 }
 
