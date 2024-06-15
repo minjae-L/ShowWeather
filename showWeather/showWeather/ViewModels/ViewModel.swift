@@ -17,7 +17,11 @@ class ViewModel {
     lazy var savedLocationWeatherDataModel: [LocationWeatherDataModel] = [] {
         didSet {
             print("savedLocationWeatherDataModel didSet")
-            fetchData(data: self.savedLocationWeatherDataModel)
+            if !self.savedLocationWeatherDataModel.isEmpty {
+                if let last = self.savedLocationWeatherDataModel.last {
+                    fetchData(dataModel: last)
+                }
+            }
         }
     }
     // 데이터 변환시 ViewController에 델리게이트 패턴을 통해 알림
@@ -30,35 +34,30 @@ class ViewModel {
     
     // nx,ny로 네트워크 통신을 통해 날씨정보 "간편" 불러오기
     // 2번을 불러오면 모든 데이터를 불러오지만, 한번만 불러와도 간편정보 모두를 가져올 수 있음. (convenience: true)
-    private func fetchData(data: [LocationWeatherDataModel]) {
-        var arr: [SavedWeatherDataModel] = []
-        for dm in data {
-            let nx = Int(dm.location.nx)!
-            let ny = Int(dm.location.ny)!
-            
-            APIManager.shared.dataFetch(nx: nx, ny: ny, convenience: true) { [weak self] result in
-                guard let self = self else { return }
-                switch result {
-                case .success(let data):
-                    if let converted = self.convertData(address: dm.address, data: data) {
-                        print("converted success")
-                        arr.append(converted)
-                        self.savedWeathers = arr
-                    }
-                case .failure(.decodingError(error: let error)):
-                    print("decodingError: \(error)")
-                case .failure(.invalidUrl):
-                    print("invalidURL Error")
-                case .failure(.missingData):
-                    print("missingData Error")
-                case .failure(.serverError(code: let code)):
-                    print("serverError code: \(code)")
-                case .failure(.transportError):
-                    print("transportError")
+    private func fetchData(dataModel: LocationWeatherDataModel) {
+        let nx = Int(dataModel.location.nx)!
+        let ny = Int(dataModel.location.ny)!
+        
+        APIManager.shared.dataFetch(nx: nx, ny: ny, convenience: true) { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let data):
+                if let converted = self.convertData(address: dataModel.address, data: data) {
+                    print("converted success")
+                    self.savedWeathers.append(converted)
                 }
+            case .failure(.decodingError(error: let error)):
+                print("decodingError: \(error)")
+            case .failure(.invalidUrl):
+                print("invalidURL Error")
+            case .failure(.missingData):
+                print("missingData Error")
+            case .failure(.serverError(code: let code)):
+                print("serverError code: \(code)")
+            case .failure(.transportError):
+                print("transportError")
             }
         }
-        
     }
     
     // WeatherDataModel -> SavedWeatherDataModel 로 데이터 변환
