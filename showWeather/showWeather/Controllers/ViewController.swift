@@ -72,7 +72,7 @@ class ViewController: UIViewController {
 // MARK: UICollectionView Delegate, DataSource, FlowLayoutDelegate
 extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 10
+        return 5
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -87,7 +87,10 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
     }
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = self.view.frame.width
-        return CGSize(width: width - 40, height: 70)
+        return CGSize(width: width - 40, height: 80)
+    }
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 15, left: 0, bottom: 15, right: 0)
     }
     
 }
