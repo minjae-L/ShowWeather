@@ -7,7 +7,7 @@
 
 import UIKit
 protocol WeatherViewControllerDelegate: AnyObject {
-    func addButtonTapped()
+    func addButtonTapped(data: LocationWeatherDataModel)
     
 }
 class WeatherViewController: UIViewController {
@@ -99,7 +99,8 @@ class WeatherViewController: UIViewController {
     @objc func addLocationWeather() {
         print("addLocationWeather")
         print(viewModel.getLocationDataModel())
-        delegate?.addButtonTapped()
+        guard let data = viewModel.getLocationDataModel() else { return }
+        delegate?.addButtonTapped(data: data)
         self.dismiss(animated: true)
     }
     @objc func cancelButtonTapped() {

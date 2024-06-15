@@ -7,12 +7,15 @@
 
 import UIKit
 import MapKit
-
+protocol SearchResultViewControllerDelegate: AnyObject {
+    func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel)
+}
 class SearchResultViewController: UIViewController {
     private let viewModel = SearchResultViewModel()
     private var searchCompleter: MKLocalSearchCompleter?
     private let searchRegion: MKCoordinateRegion = MKCoordinateRegion(MKMapRect.world)
     private var completerResults: [MKLocalSearchCompletion]?
+    weak var delegate: SearchResultViewControllerDelegate?
 //    MARK: UI Property
     private lazy var tableView: UITableView = {
         let tv = UITableView()
@@ -119,11 +122,13 @@ extension SearchResultViewController: SearchResultViewModelDelegate {
 }
 
 extension SearchResultViewController: WeatherViewControllerDelegate {
-    func addButtonTapped() {
+    func addButtonTapped(data: LocationWeatherDataModel) {
         print("WVC Delegate")
         DispatchQueue.main.async {
             self.tableView.reloadData()
             self.dismiss(animated: false)
         }
+        delegate?.didTappedAddButtonFromWeatherVC(data: data)
     }
 }
+

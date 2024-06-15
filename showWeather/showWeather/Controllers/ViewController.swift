@@ -35,6 +35,7 @@ class ViewController: UIViewController {
         self.navigationItem.hidesSearchBarWhenScrolling = false
         self.navigationItem.title = "날씨"
         let resultViewController = SearchResultViewController()
+        resultViewController.delegate = self
         let searchController = UISearchController(searchResultsController: resultViewController)
         searchController.searchResultsUpdater = resultViewController
         self.navigationItem.searchController = searchController
@@ -89,4 +90,11 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
         return CGSize(width: width - 40, height: 70)
     }
     
+}
+
+extension ViewController: SearchResultViewControllerDelegate {
+    func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel) {
+        print("VC Delegate")
+        print("data: \(data)")
+    }
 }
