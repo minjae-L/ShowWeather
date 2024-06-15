@@ -133,4 +133,24 @@ class WeatherViewModel {
             }
         }
     }
+    
+    func fetchDataFromViewController(nx: Int, ny: Int) {
+        APIManager.shared.dataFetch(nx: nx, ny: ny, convenience: false) {[weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let data):
+                self.convertDataFromCategory(response: data)
+            case .failure(.decodingError(error: let error)):
+                print("decodingError: \(error.localizedDescription)")
+            case .failure(.invalidUrl):
+                print("invalidURL")
+            case .failure(.missingData):
+                print("missingData")
+            case .failure(.serverError(code: let code)):
+                print("serverError \(code)")
+            case .failure(.transportError):
+                print("transportError")
+            }
+        }
+    }
 }

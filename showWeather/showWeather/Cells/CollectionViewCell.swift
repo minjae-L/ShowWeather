@@ -12,35 +12,30 @@ class CollectionViewCell: UICollectionViewCell {
     static let identifier = "CollectionViewCell"
     private let addressLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "서귀포시"
         lb.font = .boldSystemFont(ofSize: 20)
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
     }()
     private let timeStampLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "오후 9:35"
         lb.font = .boldSystemFont(ofSize: 10)
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
     }()
     private let temperatureLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "22°"
-        lb.font = .boldSystemFont(ofSize: 40)
+        lb.font = .boldSystemFont(ofSize: 35)
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
     }()
     private let skyInfoLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "구름많음"
         lb.font = .boldSystemFont(ofSize: 10)
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
     }()
     private let rainAmountLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "강수량: 1mm"
         lb.font = .boldSystemFont(ofSize: 10)
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
@@ -50,7 +45,7 @@ class CollectionViewCell: UICollectionViewCell {
         sv.axis = .horizontal
         sv.distribution = .fillProportionally
         sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.spacing = 20
+        sv.spacing = 5
         sv.isLayoutMarginsRelativeArrangement = true
         sv.layoutMargins.left = 10
         sv.layoutMargins.right = 10

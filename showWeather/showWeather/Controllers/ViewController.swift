@@ -91,6 +91,15 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         return UIEdgeInsets(top: 15, left: 0, bottom: 15, right: 0)
     }
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let vc = WeatherViewController()
+        let data = viewModel.savedLocationWeatherDataModel[indexPath.row]
+        let nx = Int(data.location.nx)!
+        let ny = Int(data.location.ny)!
+        vc.viewModel.fetchDataFromViewController(nx: nx, ny: ny)
+        vc.viewModel.address = data.address 
+        self.present(vc, animated: true)
+    }
     
 }
 
@@ -108,6 +117,4 @@ extension ViewController: ViewModelDelegate {
             self?.collectionView.reloadData()
         }
     }
-    
-    
 }
