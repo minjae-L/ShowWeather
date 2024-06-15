@@ -8,6 +8,7 @@
 import UIKit
 
 class CollectionViewCell: UICollectionViewCell {
+    // MARK: UI Property
     static let identifier = "CollectionViewCell"
     private let addressLabel: UILabel = {
         let lb = UILabel()
@@ -81,6 +82,7 @@ class CollectionViewCell: UICollectionViewCell {
         
         return sv
     }()
+    // MARK: Methods
     private func addViews() {
         contentView.addSubview(contentStackView)
         contentStackView.addArrangedSubview(informationStackView)

@@ -65,12 +65,6 @@ class ViewController: UIViewController {
         addViews()
         configureLayout()
     }
-    override func viewWillAppear(_ animated: Bool) {
-        print("VC viewWillAppear")
-    }
-    override func viewWillDisappear(_ animated: Bool) {
-        print("ViewController viewWillDisappear")
-    }
 }
 
 // MARK: UICollectionView Delegate, DataSource, FlowLayoutDelegate
@@ -100,12 +94,14 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
     
 }
 
+// MARK: - SearchResultViewControllerDelegate
 extension ViewController: SearchResultViewControllerDelegate {
     func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel) {
         viewModel.savedLocationWeatherDataModel.append(data)
     }
 }
 
+// MARK: - ViewModelDelegate
 extension ViewController: ViewModelDelegate {
     func savedWeathersUpdated() {
         DispatchQueue.main.async { [weak self] in
