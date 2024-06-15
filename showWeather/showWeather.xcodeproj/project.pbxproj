@@ -25,6 +25,10 @@
 		B5F8ABB82C04868000548258 /* showWeatherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F8ABB72C04868000548258 /* showWeatherTests.swift */; };
 		B5F8ABC22C04868000548258 /* showWeatherUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F8ABC12C04868000548258 /* showWeatherUITests.swift */; };
 		B5F8ABC42C04868000548258 /* showWeatherUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F8ABC32C04868000548258 /* showWeatherUITestsLaunchTests.swift */; };
+		EAF0B35F2C1D556800556A8C /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = EAF0B35E2C1D556800556A8C /* Alamofire */; };
+		EAF0B3612C1D556800556A8C /* AlamofireDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = EAF0B3602C1D556800556A8C /* AlamofireDynamic */; };
+		EAF0B3642C1D557300556A8C /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = EAF0B3632C1D557300556A8C /* SnapKit */; };
+		EAF0B3662C1D557300556A8C /* SnapKit-Dynamic in Frameworks */ = {isa = PBXBuildFile; productRef = EAF0B3652C1D557300556A8C /* SnapKit-Dynamic */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +78,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EAF0B3642C1D557300556A8C /* SnapKit in Frameworks */,
+				EAF0B35F2C1D556800556A8C /* Alamofire in Frameworks */,
+				EAF0B3612C1D556800556A8C /* AlamofireDynamic in Frameworks */,
+				EAF0B3662C1D557300556A8C /* SnapKit-Dynamic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -218,6 +226,12 @@
 			dependencies = (
 			);
 			name = showWeather;
+			packageProductDependencies = (
+				EAF0B35E2C1D556800556A8C /* Alamofire */,
+				EAF0B3602C1D556800556A8C /* AlamofireDynamic */,
+				EAF0B3632C1D557300556A8C /* SnapKit */,
+				EAF0B3652C1D557300556A8C /* SnapKit-Dynamic */,
+			);
 			productName = showWeather;
 			productReference = B5F8AB9D2C04867C00548258 /* showWeather.app */;
 			productType = "com.apple.product-type.application";
@@ -290,6 +304,10 @@
 				Base,
 			);
 			mainGroup = B5F8AB942C04867C00548258;
+			packageReferences = (
+				EAF0B35D2C1D556800556A8C /* XCRemoteSwiftPackageReference "Alamofire" */,
+				EAF0B3622C1D557300556A8C /* XCRemoteSwiftPackageReference "SnapKit" */,
+			);
 			productRefGroup = B5F8AB9E2C04867C00548258 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -683,6 +701,48 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EAF0B35D2C1D556800556A8C /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire";
+			requirement = {
+				kind = exactVersion;
+				version = 5.9.1;
+			};
+		};
+		EAF0B3622C1D557300556A8C /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit";
+			requirement = {
+				kind = exactVersion;
+				version = 5.7.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EAF0B35E2C1D556800556A8C /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EAF0B35D2C1D556800556A8C /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+		EAF0B3602C1D556800556A8C /* AlamofireDynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EAF0B35D2C1D556800556A8C /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = AlamofireDynamic;
+		};
+		EAF0B3632C1D557300556A8C /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EAF0B3622C1D557300556A8C /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+		EAF0B3652C1D557300556A8C /* SnapKit-Dynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EAF0B3622C1D557300556A8C /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = "SnapKit-Dynamic";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B5F8AB952C04867C00548258 /* Project object */;
 }
