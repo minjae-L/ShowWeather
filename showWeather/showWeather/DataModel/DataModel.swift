@@ -11,6 +11,13 @@ struct LocationWeatherDataModel {
     let address: String
     let location: (nx: String, ny: String)
 }
+struct SavedWeatherDataModel {
+    let address: String
+    let timeStamp: Date
+    let skyInfo: String
+    let temperature: String
+    let rainAmount: String
+}
 // 지역 검색 데이터 모델
 struct SearchDataModel {
     let addressLabel: String
