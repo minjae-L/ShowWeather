@@ -8,7 +8,11 @@
 import UIKit
 
 class ViewController: UIViewController {
-    private let viewModel = ViewModel()
+    private lazy var viewModel: ViewModel = {
+        let vm = ViewModel()
+        vm.delegate = self
+        return vm
+    }()
 //    MARK: UI Property
     private lazy var collectionView: UICollectionView = {
         let flowlayout = UICollectionViewFlowLayout()
@@ -97,7 +101,16 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
 
 extension ViewController: SearchResultViewControllerDelegate {
     func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel) {
-        print("VC Delegate")
-        print("data: \(data)")
+        viewModel.savedLocationWeatherDataModel.append(data)
     }
+}
+
+extension ViewController: ViewModelDelegate {
+    func savedWeathersUpdated() {
+        DispatchQueue.main.async { [weak self] in
+            self?.collectionView.reloadData()
+        }
+    }
+    
+    
 }
