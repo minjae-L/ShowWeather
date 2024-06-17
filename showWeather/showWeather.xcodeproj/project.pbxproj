@@ -25,6 +25,7 @@
 		B5F8ABB82C04868000548258 /* showWeatherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F8ABB72C04868000548258 /* showWeatherTests.swift */; };
 		B5F8ABC22C04868000548258 /* showWeatherUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F8ABC12C04868000548258 /* showWeatherUITests.swift */; };
 		B5F8ABC42C04868000548258 /* showWeatherUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F8ABC32C04868000548258 /* showWeatherUITestsLaunchTests.swift */; };
+		EA822C092C207B5D0019006B /* APIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA822C082C207B5D0019006B /* APIKey.swift */; };
 		EAF0B35F2C1D556800556A8C /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = EAF0B35E2C1D556800556A8C /* Alamofire */; };
 		EAF0B3612C1D556800556A8C /* AlamofireDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = EAF0B3602C1D556800556A8C /* AlamofireDynamic */; };
 		EAF0B3642C1D557300556A8C /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = EAF0B3632C1D557300556A8C /* SnapKit */; };
@@ -71,6 +72,7 @@
 		B5F8ABBD2C04868000548258 /* showWeatherUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = showWeatherUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B5F8ABC12C04868000548258 /* showWeatherUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = showWeatherUITests.swift; sourceTree = "<group>"; };
 		B5F8ABC32C04868000548258 /* showWeatherUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = showWeatherUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		EA822C082C207B5D0019006B /* APIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKey.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -180,6 +182,7 @@
 		B5F8AB9F2C04867C00548258 /* showWeather */ = {
 			isa = PBXGroup;
 			children = (
+				EA822C072C207B540019006B /* Private */,
 				B54925082C087F4400924EAD /* APIMangaer */,
 				B54925072C087F3900924EAD /* ViewModels */,
 				B54925062C087F2C00924EAD /* DataModel */,
@@ -208,6 +211,14 @@
 				B5F8ABC32C04868000548258 /* showWeatherUITestsLaunchTests.swift */,
 			);
 			path = showWeatherUITests;
+			sourceTree = "<group>";
+		};
+		EA822C072C207B540019006B /* Private */ = {
+			isa = PBXGroup;
+			children = (
+				EA822C082C207B5D0019006B /* APIKey.swift */,
+			);
+			path = Private;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -358,6 +369,7 @@
 				B55BC3472C060217003390A6 /* CollectionViewCell.swift in Sources */,
 				B54925022C087E5B00924EAD /* DataModel.swift in Sources */,
 				B55BC3452C05FF1E003390A6 /* APIManager.swift in Sources */,
+				EA822C092C207B5D0019006B /* APIKey.swift in Sources */,
 				B5F8ABA52C04867C00548258 /* ViewController.swift in Sources */,
 				B5F8ABA12C04867C00548258 /* AppDelegate.swift in Sources */,
 				B5F8ABA32C04867C00548258 /* SceneDelegate.swift in Sources */,
