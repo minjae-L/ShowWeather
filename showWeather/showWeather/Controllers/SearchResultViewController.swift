@@ -11,8 +11,17 @@ protocol SearchResultViewControllerDelegate: AnyObject {
     func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel)
 }
 class SearchResultViewController: UIViewController {
-    private let viewModel = SearchResultViewModel()
-    private var searchCompleter: MKLocalSearchCompleter?
+    private lazy var viewModel: SearchResultViewModel = {
+        let vm = SearchResultViewModel()
+        vm.delegate = self
+        return vm
+    }()
+    private lazy var searchCompleter: MKLocalSearchCompleter? = {
+        let completer = MKLocalSearchCompleter()
+        completer.delegate = self
+        completer.region = self.searchRegion
+        return completer
+    }()
     private let searchRegion: MKCoordinateRegion = MKCoordinateRegion(MKMapRect.world)
     private var completerResults: [MKLocalSearchCompletion]?
     weak var delegate: SearchResultViewControllerDelegate?
@@ -47,20 +56,6 @@ class SearchResultViewController: UIViewController {
         addViews()
         configureLayout()
         print("SearchResultViewController ViewdidLoad")
-    }
-    override func viewWillAppear(_ animated: Bool) {
-        print("SRVC viewWillAppear")
-        searchCompleter = MKLocalSearchCompleter()
-        searchCompleter?.region = searchRegion
-        searchCompleter?.delegate = self
-        viewModel.delegate = self
-    }
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        print("SRVC viewDidDisappear")
-        searchCompleter = nil
-        completerResults = nil
-        viewModel.removeAllElements()
     }
 }
 // MARK: TableView Delegate, Datasource
@@ -100,6 +95,13 @@ extension SearchResultViewController: UISearchResultsUpdating {
     }
 }
 
+extension SearchResultViewController: UISearchControllerDelegate {
+    func didDismissSearchController(_ searchController: UISearchController) {
+        completerResults = nil
+        viewModel.removeAllElements()
+        print("SearchVC dismiss")
+    }
+}
 // MARK: MKLocalSearchCompleterDelegate
 extension SearchResultViewController: MKLocalSearchCompleterDelegate {
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {

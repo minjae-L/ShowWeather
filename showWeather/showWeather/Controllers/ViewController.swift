@@ -41,6 +41,7 @@ class ViewController: UIViewController {
         let resultViewController = SearchResultViewController()
         resultViewController.delegate = self
         let searchController = UISearchController(searchResultsController: resultViewController)
+        searchController.delegate = resultViewController
         searchController.searchResultsUpdater = resultViewController
         self.navigationItem.searchController = searchController
     }
