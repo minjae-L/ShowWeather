@@ -12,7 +12,18 @@ protocol WeatherViewControllerDelegate: AnyObject {
 }
 class WeatherViewController: UIViewController {
 //    MARK: UI Property
-    var viewModel = WeatherViewModel()
+    convenience init(viewModel: WeatherViewModel) {
+        self.init()
+        self.viewModel = viewModel
+    }
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    var viewModel: WeatherViewModel?
     weak var delegate: WeatherViewControllerDelegate?
     private let addressLabel: UILabel = {
         let lb = UILabel()
@@ -97,8 +108,7 @@ class WeatherViewController: UIViewController {
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "추가", image: nil, target: self, action: #selector(addLocationWeather))
     }
     @objc func addLocationWeather() {
-        print("addLocationWeather")
-        print(viewModel.getLocationDataModel())
+        guard let viewModel = viewModel else { return }
         guard let data = viewModel.getLocationDataModel() else { return }
         delegate?.addButtonTapped(data: data)
         self.dismiss(animated: true)
@@ -147,19 +157,19 @@ class WeatherViewController: UIViewController {
     }
     // 날씨 정보로 UI 그리기
     private func configureTexts() {
-        guard let element = viewModel.elements.first,
+        guard let element = viewModel?.elements.first,
               let windLabel = element.wind,
               let humidityLabel = element.humidity,
               let tempText = element.temp
         else {return}
         
         // 주소 라벨
-        if viewModel.address.count > 7 {
+        if viewModel?.address.count ?? 0 > 7 {
             self.addressLabel.font = .boldSystemFont(ofSize: 20)
         } else {
             self.addressLabel.font = .boldSystemFont(ofSize: 40)
         }
-        self.addressLabel.text = viewModel.address
+        self.addressLabel.text = viewModel?.address
         
         // 온도 라벨
         self.temperatureLabel.text = "\(tempText)°"
@@ -219,7 +229,8 @@ class WeatherViewController: UIViewController {
         configureLayout()
         configureColor()
         configureNavigationBar()
-        viewModel.delegate = self
+        viewModel?.delegate = self
+        print("WVC viewDidLoad")
     }
     
 }
@@ -227,7 +238,7 @@ class WeatherViewController: UIViewController {
 // MARK: CollectionView Delegate, DataSource, DelegateFlowLayout
 extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel.elements.count
+        return viewModel?.elements.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -235,6 +246,7 @@ extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataS
                                                             for: indexPath)
                                                             as? WeatherCollectionViewCell else
                                                             { return UICollectionViewCell() }
+        guard let viewModel = viewModel else { return UICollectionViewCell() }
         cell.configure(model: viewModel.elements[indexPath.row])
         return cell
     }
@@ -246,6 +258,7 @@ extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataS
 // MARK: WeatherViewModelDelegate
 extension WeatherViewController: WeatherViewModelDelegate {
     func didUpdatedElements() {
+        print("WVMD:: didUpdatedElements")
         DispatchQueue.main.async {
             self.configureTexts()
             self.collectionView.reloadData()

@@ -22,18 +22,19 @@ class WeatherViewModel {
             }
         }
     }
+    init() {
+        
+    }
+    convenience init(address: String, completion: MKLocalSearchCompletion?) {
+        print("WVM:: convenience init")
+        self.init()
+        self.address = address
+        guard let completion = completion else { return }
+        self.search(for: completion)
+    }
     weak var delegate: WeatherViewModelDelegate?
     var address: String = ""
     private var selectedLocation: (nx: String, ny: String)?
-    // 지역 검색후 선택시 초기화된다.
-    // 초기화되면 선택된 지역의 위도 경도 값을 불러옴 (search)
-    var completion: MKLocalSearchCompletion? = nil {
-        didSet {
-            guard let completion = self.completion else { return }
-            self.search(for: completion)
-        }
-    }
-    
     // 날짜를 문자열 형식으로 변환
     // 현재시간 기준으로 6시간후 까지 날씨정보를 불러오기 위함
     private func convertDate(date: String, n: Int) -> String{

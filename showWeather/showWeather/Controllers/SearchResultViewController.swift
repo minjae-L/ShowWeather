@@ -80,12 +80,11 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let suggestion = completerResults?[indexPath.row] else { return }
-        let root = WeatherViewController()
-        root.delegate = self
-        root.viewModel.completion = suggestion
-        root.viewModel.address = viewModel.elements[indexPath.row].addressLabel
-        let vc = UINavigationController(rootViewController: root)
-        self.present(vc,animated: true)
+        let vm = WeatherViewModel(address: viewModel.elements[indexPath.row].addressLabel, completion: suggestion)
+        let vc = WeatherViewController(viewModel: vm)
+        let navigationController = UINavigationController(rootViewController: vc)
+        vc.delegate = self
+        self.present(navigationController, animated: true)
     }
     
 }
