@@ -29,7 +29,7 @@ enum NetworkError: Error {
 class APIManager {
     static let shared = APIManager()
     init() {}
-    
+
     // 변환된 x,y좌표의 url파싱
     private func getUrl(convenience: Bool, nx: Int, ny: Int) -> [URLComponents] {
         let scheme = "https"
@@ -54,10 +54,13 @@ class APIManager {
         print("current: \(dateFormatter.string(from: now))")
         print("current: \(timeFormatter.string(from: before))")
         
+        guard let url = Bundle.main.url(forResource: "Info", withExtension: "plist") else { return []}
+        guard let dictionary = NSDictionary(contentsOf: url) else { return []}
+        
         // convenience true: URLSession 한번 통신, false: 두번 통신
         if convenience {
             components.percentEncodedQueryItems = [
-                URLQueryItem(name: "serviceKey", value: "BLSSs%2FqV7vhukX%2Bxy4ts3XEuFU6UVBP6EuwoUxoEkW%2FLMRW27dBTbJXTKUhWeWy9bNidunqwB9Gb8p0Gm3FTRw%3D%3D"),
+                URLQueryItem(name: "serviceKey", value: dictionary["ApiKey"] as! String),
                 URLQueryItem(name: "numOfRows", value: "30"),
                 URLQueryItem(name: "pageNo", value: "1"),
                 URLQueryItem(name: "dataType", value: "JSON"),
@@ -71,7 +74,7 @@ class APIManager {
             // 총 데이터수는 60개지만 1회호출로 가져올 수 있는 데이터의 최대갯수는 50개이므로 두번 걸쳐서 받기위해 URLComponents를 배열로 담아서 리턴
             for i in 1...2 {
                 components.percentEncodedQueryItems = [
-                    URLQueryItem(name: "serviceKey", value: "BLSSs%2FqV7vhukX%2Bxy4ts3XEuFU6UVBP6EuwoUxoEkW%2FLMRW27dBTbJXTKUhWeWy9bNidunqwB9Gb8p0Gm3FTRw%3D%3D"),
+                    URLQueryItem(name: "serviceKey", value: dictionary["ApiKey"] as! String),
                     URLQueryItem(name: "numOfRows", value: "30"),
                     URLQueryItem(name: "pageNo", value: String(i)),
                     URLQueryItem(name: "dataType", value: "JSON"),
