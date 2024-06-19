@@ -7,12 +7,24 @@
 
 import UIKit
 import MapKit
-
+protocol SearchResultViewControllerDelegate: AnyObject {
+    func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel)
+}
 class SearchResultViewController: UIViewController {
-    private let viewModel = SearchResultViewModel()
-    private var searchCompleter: MKLocalSearchCompleter?
+    private lazy var viewModel: SearchResultViewModel = {
+        let vm = SearchResultViewModel()
+        vm.delegate = self
+        return vm
+    }()
+    private lazy var searchCompleter: MKLocalSearchCompleter? = {
+        let completer = MKLocalSearchCompleter()
+        completer.delegate = self
+        completer.region = self.searchRegion
+        return completer
+    }()
     private let searchRegion: MKCoordinateRegion = MKCoordinateRegion(MKMapRect.world)
     private var completerResults: [MKLocalSearchCompletion]?
+    weak var delegate: SearchResultViewControllerDelegate?
 //    MARK: UI Property
     private lazy var tableView: UITableView = {
         let tv = UITableView()
@@ -41,17 +53,9 @@ class SearchResultViewController: UIViewController {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("SearchResultViewController ViewdidLoad")
-        searchCompleter = MKLocalSearchCompleter()
-        searchCompleter?.delegate = self
-        searchCompleter?.region = searchRegion
-        viewModel.delegate = self
         addViews()
         configureLayout()
-    }
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        searchCompleter = nil
+        print("SearchResultViewController ViewdidLoad")
     }
 }
 // MARK: TableView Delegate, Datasource
@@ -71,13 +75,12 @@ extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let suggestion = completerResults?[indexPath.row] else { return }
-        let root = WeatherViewController()
-        root.viewModel.completion = suggestion
-        root.viewModel.address = viewModel.elements[indexPath.row].addressLabel
-        let vc = UINavigationController(rootViewController: root)
-        self.present(vc,animated: true)
+        let vm = WeatherViewModel(address: viewModel.elements[indexPath.row].addressLabel, completion: suggestion)
+        let vc = WeatherViewController(viewModel: vm)
+        let navigationController = UINavigationController(rootViewController: vc)
+        vc.delegate = self
+        self.present(navigationController, animated: true)
     }
-    
     
 }
 // MARK: UISearchController:: UISearchResultsUpdating
@@ -92,6 +95,13 @@ extension SearchResultViewController: UISearchResultsUpdating {
     }
 }
 
+extension SearchResultViewController: UISearchControllerDelegate {
+    func didDismissSearchController(_ searchController: UISearchController) {
+        completerResults = nil
+        viewModel.removeAllElements()
+        print("SearchVC dismiss")
+    }
+}
 // MARK: MKLocalSearchCompleterDelegate
 extension SearchResultViewController: MKLocalSearchCompleterDelegate {
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
@@ -111,3 +121,15 @@ extension SearchResultViewController: SearchResultViewModelDelegate {
         }
     }
 }
+
+extension SearchResultViewController: WeatherViewControllerDelegate {
+    func addButtonTapped(data: LocationWeatherDataModel) {
+        print("WVC Delegate")
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+            self.dismiss(animated: false)
+        }
+        delegate?.didTappedAddButtonFromWeatherVC(data: data)
+    }
+}
+

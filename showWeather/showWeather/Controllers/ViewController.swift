@@ -8,7 +8,11 @@
 import UIKit
 
 class ViewController: UIViewController {
-    private let viewModel = ViewModel()
+    private lazy var viewModel: ViewModel = {
+        let vm = ViewModel()
+        vm.delegate = self
+        return vm
+    }()
 //    MARK: UI Property
     private lazy var collectionView: UICollectionView = {
         let flowlayout = UICollectionViewFlowLayout()
@@ -35,10 +39,10 @@ class ViewController: UIViewController {
         self.navigationItem.hidesSearchBarWhenScrolling = false
         self.navigationItem.title = "날씨"
         let resultViewController = SearchResultViewController()
+        resultViewController.delegate = self
         let searchController = UISearchController(searchResultsController: resultViewController)
+        searchController.delegate = resultViewController
         searchController.searchResultsUpdater = resultViewController
-
-        
         self.navigationItem.searchController = searchController
     }
     private func addViews() {
@@ -67,7 +71,7 @@ class ViewController: UIViewController {
 // MARK: UICollectionView Delegate, DataSource, FlowLayoutDelegate
 extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 10
+        return viewModel.savedWeathers.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -78,11 +82,40 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, 
         cell.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
         cell.clipsToBounds = true
         cell.layer.cornerRadius = 10
+        cell.configure(model: viewModel.savedWeathers[indexPath.row])
         return cell
     }
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = self.view.frame.width
-        return CGSize(width: width - 40, height: 70)
+        return CGSize(width: width - 40, height: 80)
+    }
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 15, left: 0, bottom: 15, right: 0)
+    }
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let data = viewModel.savedLocationWeatherDataModel[indexPath.row]
+        let nx = Int(data.location.nx)!
+        let ny = Int(data.location.ny)!
+        let vm = WeatherViewModel(address: data.address, completion: nil)
+        let vc = WeatherViewController(viewModel: vm)
+        vc.viewModel?.fetchDataFromViewController(nx: nx, ny: ny)
+        self.present(vc, animated: true)
     }
     
+}
+
+// MARK: - SearchResultViewControllerDelegate
+extension ViewController: SearchResultViewControllerDelegate {
+    func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel) {
+        viewModel.savedLocationWeatherDataModel.append(data)
+    }
+}
+
+// MARK: - ViewModelDelegate
+extension ViewController: ViewModelDelegate {
+    func savedWeathersUpdated() {
+        DispatchQueue.main.async { [weak self] in
+            self?.collectionView.reloadData()
+        }
+    }
 }

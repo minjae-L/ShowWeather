@@ -11,7 +11,6 @@ import Foundation
 struct LatXLngY {
     public var lat: Double
     public var lng: Double
-    
     public var x: Int
     public var y: Int
     
@@ -30,9 +29,9 @@ enum NetworkError: Error {
 class APIManager {
     static let shared = APIManager()
     init() {}
-    
+
     // 변환된 x,y좌표의 url파싱
-    private func getUrl(nx: Int, ny: Int) -> [URLComponents] {
+    private func getUrl(convenience: Bool, nx: Int, ny: Int) -> [URLComponents] {
         let scheme = "https"
         let host = "apis.data.go.kr"
         let path = "/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst"
@@ -55,12 +54,15 @@ class APIManager {
         print("current: \(dateFormatter.string(from: now))")
         print("current: \(timeFormatter.string(from: before))")
         
-        // 총 데이터수는 60개지만 1회호출로 가져올 수 있는 데이터의 최대갯수는 50개이므로 두번 걸쳐서 받기위해 URLComponents를 배열로 담아서 리턴
-        for i in 1...2 {
+        guard let url = Bundle.main.url(forResource: "Info", withExtension: "plist") else { return []}
+        guard let dictionary = NSDictionary(contentsOf: url) else { return []}
+        
+        // convenience true: URLSession 한번 통신, false: 두번 통신
+        if convenience {
             components.percentEncodedQueryItems = [
-                URLQueryItem(name: "serviceKey", value: "BLSSs%2FqV7vhukX%2Bxy4ts3XEuFU6UVBP6EuwoUxoEkW%2FLMRW27dBTbJXTKUhWeWy9bNidunqwB9Gb8p0Gm3FTRw%3D%3D"),
+                URLQueryItem(name: "serviceKey", value: dictionary["ApiKey"] as! String),
                 URLQueryItem(name: "numOfRows", value: "30"),
-                URLQueryItem(name: "pageNo", value: String(i)),
+                URLQueryItem(name: "pageNo", value: "1"),
                 URLQueryItem(name: "dataType", value: "JSON"),
                 URLQueryItem(name: "base_date", value: baseDate),
                 URLQueryItem(name: "base_time", value: baseTime),
@@ -68,7 +70,23 @@ class APIManager {
                 URLQueryItem(name: "ny", value: String(ny))
             ]
             arr.append(components)
+        } else {
+            // 총 데이터수는 60개지만 1회호출로 가져올 수 있는 데이터의 최대갯수는 50개이므로 두번 걸쳐서 받기위해 URLComponents를 배열로 담아서 리턴
+            for i in 1...2 {
+                components.percentEncodedQueryItems = [
+                    URLQueryItem(name: "serviceKey", value: dictionary["ApiKey"] as! String),
+                    URLQueryItem(name: "numOfRows", value: "30"),
+                    URLQueryItem(name: "pageNo", value: String(i)),
+                    URLQueryItem(name: "dataType", value: "JSON"),
+                    URLQueryItem(name: "base_date", value: baseDate),
+                    URLQueryItem(name: "base_time", value: baseTime),
+                    URLQueryItem(name: "nx", value: String(nx)),
+                    URLQueryItem(name: "ny", value: String(ny))
+                ]
+                arr.append(components)
+            }
         }
+        
         
         return arr
     }
@@ -77,9 +95,10 @@ class APIManager {
     typealias NetworkResult = (Result<WeatherDataModel, NetworkError>) -> ()
     
     // URLSession GET Data
-    func dataFetch(nx: Int, ny: Int,completion: @escaping NetworkResult) {
+    func dataFetch(nx: Int, ny: Int, convenience: Bool, completion: @escaping NetworkResult) {
         // URL 확인
-        let urls = getUrl(nx: nx, ny: ny)
+        let urls = getUrl(convenience: convenience, nx: nx, ny: ny)
+//        let urls = getUrl(nx: nx, ny: ny)
         for url in urls {
             guard let url = url.url else {
                 completion(.failure(.invalidUrl))

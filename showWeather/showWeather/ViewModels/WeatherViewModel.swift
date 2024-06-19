@@ -22,17 +22,19 @@ class WeatherViewModel {
             }
         }
     }
+    init() {
+        
+    }
+    convenience init(address: String, completion: MKLocalSearchCompletion?) {
+        print("WVM:: convenience init")
+        self.init()
+        self.address = address
+        guard let completion = completion else { return }
+        self.search(for: completion)
+    }
     weak var delegate: WeatherViewModelDelegate?
     var address: String = ""
-    // 지역 검색후 선택시 초기화된다.
-    // 초기화되면 선택된 지역의 위도 경도 값을 불러옴 (search)
-    var completion: MKLocalSearchCompletion? = nil {
-        didSet {
-            guard let completion = self.completion else { return }
-            self.search(for: completion)
-        }
-    }
-    
+    private var selectedLocation: (nx: String, ny: String)?
     // 날짜를 문자열 형식으로 변환
     // 현재시간 기준으로 6시간후 까지 날씨정보를 불러오기 위함
     private func convertDate(date: String, n: Int) -> String{
@@ -85,7 +87,11 @@ class WeatherViewModel {
         }
         self.elements = converted
     }
-    
+    func getLocationDataModel() -> LocationWeatherDataModel? {
+        guard let location = self.selectedLocation else { return nil }
+        let address = self.address
+        return LocationWeatherDataModel(address: address, location: location)
+    }
     // MKLocalSearchRequest 생성 -> 선택된 지역의 정보 가져오기(위도,경도)
     func search(for suggestedCompletion: MKLocalSearchCompletion) {
         let searchRequest = MKLocalSearch.Request(completion: suggestedCompletion)
@@ -106,9 +112,10 @@ class WeatherViewModel {
             guard let lati = places?.placemark.coordinate.latitude, let long = places?.placemark.coordinate.longitude else { return }
             // 불러온 위도 경도를 x좌표,y좌표로 변환
             let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
+            self.selectedLocation = (nx: String(location.x), ny: String(location.y))
             print("converted: \(location)")
             // URLSesison을 통한 네트워크 통신
-            APIManager.shared.dataFetch(nx: location.x, ny: location.y) {[weak self] result in
+            APIManager.shared.dataFetch(nx: location.x, ny: location.y, convenience: false) {[weak self] result in
                 guard let self = self else { return }
                 switch result {
                 case .success(let data):
@@ -124,6 +131,26 @@ class WeatherViewModel {
                 case .failure(.transportError):
                     print("transportError")
                 }
+            }
+        }
+    }
+    
+    func fetchDataFromViewController(nx: Int, ny: Int) {
+        APIManager.shared.dataFetch(nx: nx, ny: ny, convenience: false) {[weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let data):
+                self.convertDataFromCategory(response: data)
+            case .failure(.decodingError(error: let error)):
+                print("decodingError: \(error.localizedDescription)")
+            case .failure(.invalidUrl):
+                print("invalidURL")
+            case .failure(.missingData):
+                print("missingData")
+            case .failure(.serverError(code: let code)):
+                print("serverError \(code)")
+            case .failure(.transportError):
+                print("transportError")
             }
         }
     }
