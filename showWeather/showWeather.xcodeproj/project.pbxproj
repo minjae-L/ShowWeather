@@ -56,6 +56,7 @@
 		B54925092C08820300924EAD /* SearchResultViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultViewModel.swift; sourceTree = "<group>"; };
 		B55BC3442C05FF1E003390A6 /* APIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIManager.swift; sourceTree = "<group>"; };
 		B55BC3462C060217003390A6 /* CollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionViewCell.swift; sourceTree = "<group>"; };
+		B58C96972C22FAF100AF7314 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		B5B41DEB2C096BB600331D58 /* WeatherViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewController.swift; sourceTree = "<group>"; };
 		B5B41DED2C096F9200331D58 /* WeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModel.swift; sourceTree = "<group>"; };
 		B5B41DEF2C09BBB200331D58 /* WeatherCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCollectionViewCell.swift; sourceTree = "<group>"; };
@@ -160,6 +161,7 @@
 		B5F8AB942C04867C00548258 = {
 			isa = PBXGroup;
 			children = (
+				B58C96972C22FAF100AF7314 /* Secrets.xcconfig */,
 				B5F8AB9F2C04867C00548258 /* showWeather */,
 				B5F8ABB62C04868000548258 /* showWeatherTests */,
 				B5F8ABC02C04868000548258 /* showWeatherUITests */,
@@ -531,6 +533,7 @@
 		};
 		B5F8ABC82C04868000548258 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B58C96972C22FAF100AF7314 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -559,6 +562,7 @@
 		};
 		B5F8ABC92C04868000548258 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B58C96972C22FAF100AF7314 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
