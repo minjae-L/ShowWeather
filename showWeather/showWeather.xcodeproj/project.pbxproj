@@ -309,6 +309,7 @@
 			packageReferences = (
 				EAF0B35D2C1D556800556A8C /* XCRemoteSwiftPackageReference "Alamofire" */,
 				EAF0B3622C1D557300556A8C /* XCRemoteSwiftPackageReference "SnapKit" */,
+				B53872452C29B46C004B0A2E /* XCRemoteSwiftPackageReference "RxSwift" */,
 			);
 			productRefGroup = B5F8AB9E2C04867C00548258 /* Products */;
 			projectDirPath = "";
@@ -707,6 +708,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B53872452C29B46C004B0A2E /* XCRemoteSwiftPackageReference "RxSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactiveX/RxSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.0;
+			};
+		};
 		EAF0B35D2C1D556800556A8C /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Alamofire/Alamofire";
