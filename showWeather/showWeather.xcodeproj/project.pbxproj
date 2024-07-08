@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B53872482C29B581004B0A2E /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B53872472C29B581004B0A2E /* RxSwift */; };
+		B538724A2C29B589004B0A2E /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = B53872492C29B589004B0A2E /* RxCocoa */; };
 		B54924FB2C08627300924EAD /* SearchResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54924FA2C08627300924EAD /* SearchResultViewController.swift */; };
 		B54924FD2C086EFE00924EAD /* SearchResultTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54924FC2C086EFE00924EAD /* SearchResultTableViewCell.swift */; };
 		B54925002C0874A000924EAD /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54924FF2C0874A000924EAD /* ViewModel.swift */; };
@@ -79,8 +81,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B538724A2C29B589004B0A2E /* RxCocoa in Frameworks */,
 				EAF0B3642C1D557300556A8C /* SnapKit in Frameworks */,
 				EAF0B35F2C1D556800556A8C /* Alamofire in Frameworks */,
+				B53872482C29B581004B0A2E /* RxSwift in Frameworks */,
 				EAF0B3612C1D556800556A8C /* AlamofireDynamic in Frameworks */,
 				EAF0B3662C1D557300556A8C /* SnapKit-Dynamic in Frameworks */,
 			);
@@ -103,6 +107,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B53872462C29B581004B0A2E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		B54925032C087EF400924EAD /* Delegates */ = {
 			isa = PBXGroup;
 			children = (
@@ -166,6 +177,7 @@
 				B5F8ABB62C04868000548258 /* showWeatherTests */,
 				B5F8ABC02C04868000548258 /* showWeatherUITests */,
 				B5F8AB9E2C04867C00548258 /* Products */,
+				B53872462C29B581004B0A2E /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -233,6 +245,8 @@
 				EAF0B3602C1D556800556A8C /* AlamofireDynamic */,
 				EAF0B3632C1D557300556A8C /* SnapKit */,
 				EAF0B3652C1D557300556A8C /* SnapKit-Dynamic */,
+				B53872472C29B581004B0A2E /* RxSwift */,
+				B53872492C29B589004B0A2E /* RxCocoa */,
 			);
 			productName = showWeather;
 			productReference = B5F8AB9D2C04867C00548258 /* showWeather.app */;
@@ -735,6 +749,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B53872472C29B581004B0A2E /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B53872452C29B46C004B0A2E /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
+		};
+		B53872492C29B589004B0A2E /* RxCocoa */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B53872452C29B46C004B0A2E /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxCocoa;
+		};
 		EAF0B35E2C1D556800556A8C /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = EAF0B35D2C1D556800556A8C /* XCRemoteSwiftPackageReference "Alamofire" */;
