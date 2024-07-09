@@ -81,7 +81,7 @@ class WeatherViewModel {
     func getLocationDataModel() -> LocationWeatherDataModel? {
         guard let location = self.selectedLocation else { return nil }
         let address = self.address
-        return LocationWeatherDataModel(address: address, location: location)
+        return LocationWeatherDataModel(address: address, location: location, savedDataModel: nil)
     }
     // MKLocalSearchRequest 생성 -> 선택된 지역의 정보 가져오기(위도,경도)
     func search(for suggestedCompletion: MKLocalSearchCompletion) {
@@ -103,7 +103,7 @@ class WeatherViewModel {
             // 불러온 위도 경도를 x좌표,y좌표로 변환
             let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
             self?.selectedLocation = (nx: String(location.x), ny: String(location.y))
-            // URLSesison을 통한 네트워크 통신
+            // Rx+URLSesison을 통한 네트워크 통신
             APIManager.shared.getData(nx: location.x, ny: location.y, convenience: false)
                 .subscribe{[weak self] data in
                     print("WeatherVM Rx Subscribe::")

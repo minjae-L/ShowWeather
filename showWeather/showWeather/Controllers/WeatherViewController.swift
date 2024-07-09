@@ -111,8 +111,8 @@ class WeatherViewController: UIViewController {
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "추가", image: nil, target: self, action: #selector(addLocationWeather))
     }
     @objc func addLocationWeather() {
-        guard let viewModel = viewModel else { return }
-        guard let data = viewModel.getLocationDataModel() else { return }
+        guard let viewModel = viewModel,
+              let data = viewModel.getLocationDataModel() else { return }
         delegate?.addButtonTapped(data: data)
         self.dismiss(animated: true)
     }
@@ -158,6 +158,45 @@ class WeatherViewController: UIViewController {
         self.collectionView.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
         self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
     }
+
+    // MARK: viewDidLoad
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        addViews()
+        configureLayout()
+        configureColor()
+        configureNavigationBar()
+        
+        // UI 그리기
+        viewModel?.element
+            .observe(on: MainScheduler.instance)
+            .asObservable()
+            .subscribe(onNext: { [weak self] model in
+                self?.configureTexts(model: model)
+            })
+            .disposed(by: disposeBag)
+        
+        // CollectionView Bind
+        viewModel?.element
+            .observe(on: MainScheduler.instance)
+            .asObservable()
+            .bind(to: self.collectionView.rx.items(cellIdentifier: WeatherCollectionViewCell.identifier, cellType: WeatherCollectionViewCell.self)) { index, element, cell in
+                cell.configure(model: element)
+            }
+            .disposed(by: disposeBag)
+    }
+    
+}
+
+// MARK: CollectionView Delegate, DataSource, DelegateFlowLayout
+extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 70, height: self.collectionView.frame.height)
+    }
+}
+
+// MARK: UI 그리기
+extension WeatherViewController {
     // 날씨 정보로 UI 그리기
     private func configureTexts(model: [WeatherModel]) {
         guard let element = model.first,
@@ -225,39 +264,5 @@ class WeatherViewController: UIViewController {
         
         // 습도 라벨
         self.humidity.text = "습도: \(humidityLabel)%"
-    }
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        addViews()
-        configureLayout()
-        configureColor()
-        configureNavigationBar()
-        print("WVC viewDidLoad")
-        
-        // UI 그리기
-        viewModel?.element
-            .observe(on: MainScheduler.instance)
-            .asObservable()
-            .subscribe(onNext: { [weak self] model in
-                self?.configureTexts(model: model)
-            })
-            .disposed(by: disposeBag)
-        
-        // CollectionView Bind
-        viewModel?.element
-            .observe(on: MainScheduler.instance)
-            .asObservable()
-            .bind(to: self.collectionView.rx.items(cellIdentifier: WeatherCollectionViewCell.identifier, cellType: WeatherCollectionViewCell.self)) { index, element, cell in
-                cell.configure(model: element)
-            }
-            .disposed(by: disposeBag)
-    }
-    
-}
-
-// MARK: CollectionView Delegate, DataSource, DelegateFlowLayout
-extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 70, height: self.collectionView.frame.height)
     }
 }
