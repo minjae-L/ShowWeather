@@ -7,6 +7,8 @@
 
 import Foundation
 import MapKit
+import RxSwift
+import RxCocoa
 
 protocol WeatherViewModelDelegate: AnyObject {
     func didUpdatedElements()
@@ -22,8 +24,16 @@ class WeatherViewModel {
             }
         }
     }
+    let disposeBag = DisposeBag()
+    var element = BehaviorRelay<[WeatherModel]>(value: [])
+    
     init() {
-        
+        element
+            .subscribe{
+                print("Rx:: element")
+                print($0)
+            }
+            .disposed(by: disposeBag)
     }
     convenience init(address: String, completion: MKLocalSearchCompletion?) {
         print("WVM:: convenience init")
@@ -86,6 +96,7 @@ class WeatherViewModel {
             if idx > 5 { idx = 0 }
         }
         self.elements = converted
+        self.element.accept(converted)
     }
     func getLocationDataModel() -> LocationWeatherDataModel? {
         guard let location = self.selectedLocation else { return nil }
@@ -101,7 +112,7 @@ class WeatherViewModel {
         searchRequest.region = MKCoordinateRegion(MKMapRect.world)
         searchRequest.resultTypes = .address
         let localSearch = MKLocalSearch(request: searchRequest)
-        localSearch.start { (response, error) in
+        localSearch.start { [weak self] (response, error) in
             guard error == nil else {
                 print("searchError")
                 print(error?.localizedDescription)
@@ -112,7 +123,7 @@ class WeatherViewModel {
             guard let lati = places?.placemark.coordinate.latitude, let long = places?.placemark.coordinate.longitude else { return }
             // 불러온 위도 경도를 x좌표,y좌표로 변환
             let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
-            self.selectedLocation = (nx: String(location.x), ny: String(location.y))
+            self?.selectedLocation = (nx: String(location.x), ny: String(location.y))
             print("converted: \(location)")
             // URLSesison을 통한 네트워크 통신
             APIManager.shared.dataFetch(nx: location.x, ny: location.y, convenience: false) {[weak self] result in
@@ -132,6 +143,15 @@ class WeatherViewModel {
                     print("transportError")
                 }
             }
+            APIManager.shared.getData(nx: location.x, ny: location.y, convenience: false)
+                .subscribe{[weak self] data in
+                    print("WeatherVM Rx Subscribe::")
+                    guard let element = data.element else { return }
+                    self?.convertDataFromCategory(response: element)
+                    print(data)
+                }
+                .disposed(by: self?.disposeBag ?? DisposeBag())
+
         }
     }
     
