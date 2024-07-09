@@ -6,27 +6,71 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 class ViewController: UIViewController {
-    private lazy var viewModel: ViewModel = {
-        let vm = ViewModel()
-        vm.delegate = self
-        return vm
-    }()
+    private let viewModel = ViewModel()
+    private let disposeBag = DisposeBag()
 //    MARK: UI Property
     private lazy var collectionView: UICollectionView = {
         let flowlayout = UICollectionViewFlowLayout()
         flowlayout.scrollDirection = .vertical
         flowlayout.sectionHeadersPinToVisibleBounds = true
         let cv = UICollectionView(frame: .zero, collectionViewLayout: flowlayout)
-        cv.dataSource = self
         cv.delegate = self
         cv.translatesAutoresizingMaskIntoConstraints = false
         cv.register(CollectionViewCell.self, forCellWithReuseIdentifier: CollectionViewCell.identifier)
         
         return cv
     }()
-//    MARK: Methods
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        configureNavigationBar()
+        addViews()
+        configureLayout()
+        
+        // ViewModel의 savedWeather과 collectionView 바인딩
+        viewModel.savedWeather
+            .observe(on: MainScheduler.instance)
+            .bind(to: collectionView.rx.items(cellIdentifier: CollectionViewCell.identifier, cellType: CollectionViewCell.self)) { index, element, cell in
+                guard let model = element.savedDataModel else  { return }
+                cell.configure(model: model)
+            }
+            .disposed(by: disposeBag)
+    }
+}
+
+// MARK: UICollectionView Delegate, DataSource, FlowLayoutDelegate
+extension ViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = self.view.frame.width
+        return CGSize(width: width - 40, height: 80)
+    }
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 15, left: 0, bottom: 15, right: 0)
+    }
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let data = viewModel.savedWeather.value[indexPath.row]
+        let nx = Int(data.location.nx)!
+        let ny = Int(data.location.ny)!
+        let vm = WeatherViewModel(address: data.address, completion: nil)
+        let vc = WeatherViewController(viewModel: vm)
+        vc.viewModel?.fetchDataFromViewController(nx: nx, ny: ny)
+        self.present(vc, animated: true)
+    }
+    
+}
+
+// MARK: - SearchResultViewControllerDelegate
+extension ViewController: SearchResultViewControllerDelegate {
+    func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel) {
+        viewModel.saveData(model: data)
+    }
+}
+
+// MARK: - UI Property Method
+extension ViewController {
     private func configureNavigationBar() {
         let appearance = UINavigationBarAppearance()
         appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor(named: "LabelTextColor")]
@@ -59,63 +103,5 @@ class ViewController: UIViewController {
     private func configureColor() {
         self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
         self.collectionView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-    }
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        configureNavigationBar()
-        addViews()
-        configureLayout()
-    }
-}
-
-// MARK: UICollectionView Delegate, DataSource, FlowLayoutDelegate
-extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel.savedWeathers.count
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CollectionViewCell.identifier,
-                                                            for: indexPath)
-                                                            as? CollectionViewCell else {
-                                                            return UICollectionViewCell()}
-        cell.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
-        cell.clipsToBounds = true
-        cell.layer.cornerRadius = 10
-        cell.configure(model: viewModel.savedWeathers[indexPath.row])
-        return cell
-    }
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = self.view.frame.width
-        return CGSize(width: width - 40, height: 80)
-    }
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: 15, left: 0, bottom: 15, right: 0)
-    }
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let data = viewModel.savedLocationWeatherDataModel[indexPath.row]
-        let nx = Int(data.location.nx)!
-        let ny = Int(data.location.ny)!
-        let vm = WeatherViewModel(address: data.address, completion: nil)
-        let vc = WeatherViewController(viewModel: vm)
-        vc.viewModel?.fetchDataFromViewController(nx: nx, ny: ny)
-        self.present(vc, animated: true)
-    }
-    
-}
-
-// MARK: - SearchResultViewControllerDelegate
-extension ViewController: SearchResultViewControllerDelegate {
-    func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel) {
-        viewModel.savedLocationWeatherDataModel.append(data)
-    }
-}
-
-// MARK: - ViewModelDelegate
-extension ViewController: ViewModelDelegate {
-    func savedWeathersUpdated() {
-        DispatchQueue.main.async { [weak self] in
-            self?.collectionView.reloadData()
-        }
     }
 }
