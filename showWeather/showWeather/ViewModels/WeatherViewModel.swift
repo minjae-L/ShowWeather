@@ -10,31 +10,12 @@ import MapKit
 import RxSwift
 import RxCocoa
 
-protocol WeatherViewModelDelegate: AnyObject {
-    func didUpdatedElements()
-}
-
 class WeatherViewModel {
-    var elements: [WeatherModel] = [] {
-        didSet {
-            print("WVM:: elements didSet")
-            var allLoaded = false
-            if elements[0].wind != nil {
-                delegate?.didUpdatedElements()
-            }
-        }
-    }
+    var elements: [WeatherModel] = []
     let disposeBag = DisposeBag()
     var element = BehaviorRelay<[WeatherModel]>(value: [])
     
-    init() {
-        element
-            .subscribe{
-                print("Rx:: element")
-                print($0)
-            }
-            .disposed(by: disposeBag)
-    }
+    init() { }
     convenience init(address: String, completion: MKLocalSearchCompletion?) {
         print("WVM:: convenience init")
         self.init()
@@ -42,7 +23,6 @@ class WeatherViewModel {
         guard let completion = completion else { return }
         self.search(for: completion)
     }
-    weak var delegate: WeatherViewModelDelegate?
     var address: String = ""
     private var selectedLocation: (nx: String, ny: String)?
     // 날짜를 문자열 형식으로 변환
@@ -119,36 +99,16 @@ class WeatherViewModel {
                 return
             }
             let places = response?.mapItems[0]
-            print(places?.placemark.coordinate)
             guard let lati = places?.placemark.coordinate.latitude, let long = places?.placemark.coordinate.longitude else { return }
             // 불러온 위도 경도를 x좌표,y좌표로 변환
             let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
             self?.selectedLocation = (nx: String(location.x), ny: String(location.y))
-            print("converted: \(location)")
             // URLSesison을 통한 네트워크 통신
-            APIManager.shared.dataFetch(nx: location.x, ny: location.y, convenience: false) {[weak self] result in
-                guard let self = self else { return }
-                switch result {
-                case .success(let data):
-                    self.convertDataFromCategory(response: data)
-                case .failure(.decodingError(error: let error)):
-                    print("decodingError: \(error.localizedDescription)")
-                case .failure(.invalidUrl):
-                    print("invalidURL")
-                case .failure(.missingData):
-                    print("missingData")
-                case .failure(.serverError(code: let code)):
-                    print("serverError \(code)")
-                case .failure(.transportError):
-                    print("transportError")
-                }
-            }
             APIManager.shared.getData(nx: location.x, ny: location.y, convenience: false)
                 .subscribe{[weak self] data in
                     print("WeatherVM Rx Subscribe::")
                     guard let element = data.element else { return }
                     self?.convertDataFromCategory(response: element)
-                    print(data)
                 }
                 .disposed(by: self?.disposeBag ?? DisposeBag())
 
@@ -156,22 +116,10 @@ class WeatherViewModel {
     }
     
     func fetchDataFromViewController(nx: Int, ny: Int) {
-        APIManager.shared.dataFetch(nx: nx, ny: ny, convenience: false) {[weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let data):
-                self.convertDataFromCategory(response: data)
-            case .failure(.decodingError(error: let error)):
-                print("decodingError: \(error.localizedDescription)")
-            case .failure(.invalidUrl):
-                print("invalidURL")
-            case .failure(.missingData):
-                print("missingData")
-            case .failure(.serverError(code: let code)):
-                print("serverError \(code)")
-            case .failure(.transportError):
-                print("transportError")
+        APIManager.shared.getData(nx: nx, ny: ny, convenience: false)
+            .subscribe{ [weak self] data in
+                self?.convertDataFromCategory(response: data)
             }
-        }
+            .disposed(by: disposeBag)
     }
 }

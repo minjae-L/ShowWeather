@@ -6,6 +6,9 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
+
 protocol WeatherViewControllerDelegate: AnyObject {
     func addButtonTapped(data: LocationWeatherDataModel)
     
@@ -25,6 +28,7 @@ class WeatherViewController: UIViewController {
     }
     var viewModel: WeatherViewModel?
     weak var delegate: WeatherViewControllerDelegate?
+    private let disposeBag = DisposeBag()
     private let addressLabel: UILabel = {
         let lb = UILabel()
         lb.translatesAutoresizingMaskIntoConstraints = false
@@ -95,7 +99,6 @@ class WeatherViewController: UIViewController {
         cv.translatesAutoresizingMaskIntoConstraints = false
         cv.showsHorizontalScrollIndicator = false
         cv.delegate = self
-        cv.dataSource = self
         cv.register(WeatherCollectionViewCell.self, forCellWithReuseIdentifier: WeatherCollectionViewCell.identifier)
         cv.clipsToBounds = true
         cv.layer.cornerRadius = 10
@@ -156,8 +159,8 @@ class WeatherViewController: UIViewController {
         self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
     }
     // 날씨 정보로 UI 그리기
-    private func configureTexts() {
-        guard let element = viewModel?.elements.first,
+    private func configureTexts(model: [WeatherModel]) {
+        guard let element = model.first,
               let windLabel = element.wind,
               let humidityLabel = element.humidity,
               let tempText = element.temp
@@ -229,39 +232,32 @@ class WeatherViewController: UIViewController {
         configureLayout()
         configureColor()
         configureNavigationBar()
-        viewModel?.delegate = self
         print("WVC viewDidLoad")
+        
+        // UI 그리기
+        viewModel?.element
+            .observe(on: MainScheduler.instance)
+            .asObservable()
+            .subscribe(onNext: { [weak self] model in
+                self?.configureTexts(model: model)
+            })
+            .disposed(by: disposeBag)
+        
+        // CollectionView Bind
+        viewModel?.element
+            .observe(on: MainScheduler.instance)
+            .asObservable()
+            .bind(to: self.collectionView.rx.items(cellIdentifier: WeatherCollectionViewCell.identifier, cellType: WeatherCollectionViewCell.self)) { index, element, cell in
+                cell.configure(model: element)
+            }
+            .disposed(by: disposeBag)
     }
     
 }
 
 // MARK: CollectionView Delegate, DataSource, DelegateFlowLayout
-extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel?.elements.count ?? 0
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: WeatherCollectionViewCell.identifier,
-                                                            for: indexPath)
-                                                            as? WeatherCollectionViewCell else
-                                                            { return UICollectionViewCell() }
-        guard let viewModel = viewModel else { return UICollectionViewCell() }
-        cell.configure(model: viewModel.elements[indexPath.row])
-        return cell
-    }
+extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: 70, height: self.collectionView.frame.height)
-    }
-}
-
-// MARK: WeatherViewModelDelegate
-extension WeatherViewController: WeatherViewModelDelegate {
-    func didUpdatedElements() {
-        print("WVMD:: didUpdatedElements")
-        DispatchQueue.main.async {
-            self.configureTexts()
-            self.collectionView.reloadData()
-        }
     }
 }
