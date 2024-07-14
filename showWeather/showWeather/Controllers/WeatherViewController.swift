@@ -105,60 +105,6 @@ class WeatherViewController: UIViewController {
         return cv
     }()
     
-//    MARK: Methods
-    private func configureNavigationBar() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "취소", image: nil, target: self, action: #selector(cancelButtonTapped))
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "추가", image: nil, target: self, action: #selector(addLocationWeather))
-    }
-    @objc func addLocationWeather() {
-        guard let viewModel = viewModel,
-              let data = viewModel.getLocationDataModel() else { return }
-        delegate?.addButtonTapped(data: data)
-        self.dismiss(animated: true)
-    }
-    @objc func cancelButtonTapped() {
-        self.dismiss(animated: true)
-    }
-    private func addViews() {
-        rainStackView.addArrangedSubview(rainTypeLabel)
-        rainStackView.addArrangedSubview(rainAmountLabel)
-        humidityStackView.addArrangedSubview(windLabel)
-        humidityStackView.addArrangedSubview(humidity)
-        contentStackView.addArrangedSubview(addressLabel)
-        contentStackView.addArrangedSubview(temperatureLabel)
-        contentStackView.addArrangedSubview(skyImageView)
-        contentStackView.addArrangedSubview(rainStackView)
-        contentStackView.addArrangedSubview(humidityStackView)
-        view.addSubview(contentStackView)
-        view.addSubview(collectionView)
-    }
-    private func configureLayout() {
-        NSLayoutConstraint.activate([
-            contentStackView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 50),
-            contentStackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            contentStackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            contentStackView.bottomAnchor.constraint(equalTo: collectionView.topAnchor, constant: -20),
-            collectionView.heightAnchor.constraint(equalToConstant: 200),
-            collectionView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor,constant: 20),
-            collectionView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20),
-            collectionView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor,constant: -50),
-
-        ])
-    }
-    private func configureColor() {
-        self.addressLabel.textColor = UIColor(named: "LabelTextColor")
-        self.temperatureLabel.textColor = UIColor(named: "LabelTextColor")
-        self.rainTypeLabel.textColor = UIColor(named: "LabelTextColor")
-        self.rainAmountLabel.textColor = UIColor(named: "LabelTextColor")
-        self.windLabel.textColor = UIColor(named: "LabelTextColor")
-        self.humidity.textColor = UIColor(named: "LabelTextColor")
-        self.contentStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-        self.rainStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-        self.humidityStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-        self.collectionView.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
-        self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-    }
-
     // MARK: viewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -172,6 +118,8 @@ class WeatherViewController: UIViewController {
             .observe(on: MainScheduler.instance)
             .asObservable()
             .subscribe(onNext: { [weak self] model in
+                print("viewModel bind")
+                print("model: \(model)")
                 self?.configureTexts(model: model)
             })
             .disposed(by: disposeBag)
@@ -197,6 +145,59 @@ extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDeleg
 
 // MARK: UI 그리기
 extension WeatherViewController {
+    //    MARK: Methods
+        private func configureNavigationBar() {
+            self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "취소", image: nil, target: self, action: #selector(cancelButtonTapped))
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "추가", image: nil, target: self, action: #selector(addLocationWeather))
+        }
+        @objc func addLocationWeather() {
+            guard let viewModel = viewModel,
+                  let data = viewModel.getLocationDataModel() else { return }
+            delegate?.addButtonTapped(data: data)
+            self.dismiss(animated: true)
+        }
+        @objc func cancelButtonTapped() {
+            self.dismiss(animated: true)
+        }
+        private func addViews() {
+            rainStackView.addArrangedSubview(rainTypeLabel)
+            rainStackView.addArrangedSubview(rainAmountLabel)
+            humidityStackView.addArrangedSubview(windLabel)
+            humidityStackView.addArrangedSubview(humidity)
+            contentStackView.addArrangedSubview(addressLabel)
+            contentStackView.addArrangedSubview(temperatureLabel)
+            contentStackView.addArrangedSubview(skyImageView)
+            contentStackView.addArrangedSubview(rainStackView)
+            contentStackView.addArrangedSubview(humidityStackView)
+            view.addSubview(contentStackView)
+            view.addSubview(collectionView)
+        }
+        private func configureLayout() {
+            NSLayoutConstraint.activate([
+                contentStackView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 50),
+                contentStackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+                contentStackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+                contentStackView.bottomAnchor.constraint(equalTo: collectionView.topAnchor, constant: -20),
+                collectionView.heightAnchor.constraint(equalToConstant: 200),
+                collectionView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor,constant: 20),
+                collectionView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20),
+                collectionView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor,constant: -50),
+
+            ])
+        }
+        private func configureColor() {
+            self.addressLabel.textColor = UIColor(named: "LabelTextColor")
+            self.temperatureLabel.textColor = UIColor(named: "LabelTextColor")
+            self.rainTypeLabel.textColor = UIColor(named: "LabelTextColor")
+            self.rainAmountLabel.textColor = UIColor(named: "LabelTextColor")
+            self.windLabel.textColor = UIColor(named: "LabelTextColor")
+            self.humidity.textColor = UIColor(named: "LabelTextColor")
+            self.contentStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+            self.rainStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+            self.humidityStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+            self.collectionView.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
+            self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+        }
     // 날씨 정보로 UI 그리기
     private func configureTexts(model: [WeatherModel]) {
         guard let element = model.first,

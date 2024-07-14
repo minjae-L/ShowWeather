@@ -98,19 +98,21 @@ class WeatherViewModel {
                 print(error?.localizedDescription)
                 return
             }
+            guard let self = self else { return }
             let places = response?.mapItems[0]
             guard let lati = places?.placemark.coordinate.latitude, let long = places?.placemark.coordinate.longitude else { return }
             // 불러온 위도 경도를 x좌표,y좌표로 변환
             let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
-            self?.selectedLocation = (nx: String(location.x), ny: String(location.y))
+            self.selectedLocation = (nx: String(location.x), ny: String(location.y))
             // Rx+URLSesison을 통한 네트워크 통신
             APIManager.shared.getData(nx: location.x, ny: location.y, convenience: false)
+                .share(replay: 1,scope: .whileConnected)
                 .subscribe{[weak self] data in
                     print("WeatherVM Rx Subscribe::")
                     guard let element = data.element else { return }
                     self?.convertDataFromCategory(response: element)
                 }
-                .disposed(by: self?.disposeBag ?? DisposeBag())
+                .disposed(by: self.disposeBag)
 
         }
     }
