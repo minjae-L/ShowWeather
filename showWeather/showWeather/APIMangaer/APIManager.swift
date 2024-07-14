@@ -18,80 +18,98 @@ struct LatXLngY {
     
 }
 
-// APIManager: URLSession, 위도경도변환함수
+// APIManager: Rx+URLSession, 위도경도변환함수
 class APIManager {
     static let shared = APIManager()
     init() {}
-    
     private let disposeBag = DisposeBag()
     private let session = URLSession(configuration: .default)
+    private let APIKEY: String = {
+        guard let url = Bundle.main.url(forResource: "Info", withExtension: "plist"),
+              let dictionary = NSDictionary(contentsOf: url)
+        else {
+            print("Error:: api key doesn't loaded")
+            return ""
+        }
+        return dictionary["ApiKey"] as! String
+    }()
     
-    // MARK: Rx + URLSession
-    private func getUrls(convenience: Bool, nx: Int, ny: Int) -> Observable<URLComponents> {
-        return Observable.create { observer in
-            let scheme = "https"
-            let host = "apis.data.go.kr"
-            let path = "/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst"
-            
-            var arr = [URLComponents]()
-            var components = URLComponents()
-            components.scheme = scheme
-            components.host = host
-            components.path = path
-            
-            // 현재날짜와 시간 구하기
-            let now = Date()
-            let before = Calendar.current.date(byAdding: .minute, value: -30, to: now)!
-            let dateFormatter = DateFormatter()
-            let timeFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyyMMdd"
-            timeFormatter.dateFormat = "HHmm"
-            let baseDate = dateFormatter.string(from: now)
-            let baseTime = timeFormatter.string(from: before)
-            
-            guard let url = Bundle.main.url(forResource: "Info", withExtension: "plist") else {
-                print("Error:: can't find api key")
-                return Disposables.create()
-            }
-            guard let dictionary = NSDictionary(contentsOf: url) else {
-                print("Error:: api key doesn't loaded")
-                return Disposables.create()
-            }
-            
-            // convenience true: URLSession 한번 통신, false: 두번 통신
-            if convenience {
+    // MARK: Rx+URLSession
+    private func currentDate() -> (baseDate: String, baseTime: String){
+        let now = Date()
+        let before = Calendar.current.date(byAdding: .minute, value: -30, to: now)!
+        let dateFormatter = DateFormatter()
+        let timeFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd"
+        timeFormatter.dateFormat = "HHmm"
+        let baseDate = dateFormatter.string(from: now)
+        let baseTime = timeFormatter.string(from: before)
+        
+        return (baseDate, baseTime)
+    }
+    
+    private func urlComponent(nx: Int, ny: Int, convenience: Bool) -> [URLComponents] {
+        let scheme = "https"
+        let host = "apis.data.go.kr"
+        let path = "/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst"
+        
+        var arr = [URLComponents]()
+        var components = URLComponents()
+        components.scheme = scheme
+        components.host = host
+        components.path = path
+        
+        let baseDate = self.currentDate().baseDate
+        let baseTime = self.currentDate().baseTime
+        
+        // convenience true: URLSession 한번 통신, false: 두번 통신
+        if convenience {
+            components.percentEncodedQueryItems = [
+                URLQueryItem(name: "serviceKey", value: APIKEY),
+                URLQueryItem(name: "numOfRows", value: "30"),
+                URLQueryItem(name: "pageNo", value: "1"),
+                URLQueryItem(name: "dataType", value: "JSON"),
+                URLQueryItem(name: "base_date", value: baseDate),
+                URLQueryItem(name: "base_time", value: baseTime),
+                URLQueryItem(name: "nx", value: String(nx)),
+                URLQueryItem(name: "ny", value: String(ny))
+            ]
+            arr.append(components)
+        } else {
+            // 총 데이터수는 60개지만 1회호출로 가져올 수 있는 데이터의 최대갯수는 50개이므로 두번 걸쳐서 받기위해 URLComponents를 배열로 담아서 리턴
+            for i in 1...2 {
                 components.percentEncodedQueryItems = [
-                    URLQueryItem(name: "serviceKey", value: dictionary["ApiKey"] as! String),
+                    URLQueryItem(name: "serviceKey", value: APIKEY),
                     URLQueryItem(name: "numOfRows", value: "30"),
-                    URLQueryItem(name: "pageNo", value: "1"),
+                    URLQueryItem(name: "pageNo", value: String(i)),
                     URLQueryItem(name: "dataType", value: "JSON"),
                     URLQueryItem(name: "base_date", value: baseDate),
                     URLQueryItem(name: "base_time", value: baseTime),
                     URLQueryItem(name: "nx", value: String(nx)),
                     URLQueryItem(name: "ny", value: String(ny))
                 ]
-                observer.onNext(components)
-            } else {
-                // 총 데이터수는 60개지만 1회호출로 가져올 수 있는 데이터의 최대갯수는 50개이므로 두번 걸쳐서 받기위해 URLComponents를 배열로 담아서 리턴
-                for i in 1...2 {
-                    components.percentEncodedQueryItems = [
-                        URLQueryItem(name: "serviceKey", value: dictionary["ApiKey"] as! String),
-                        URLQueryItem(name: "numOfRows", value: "30"),
-                        URLQueryItem(name: "pageNo", value: String(i)),
-                        URLQueryItem(name: "dataType", value: "JSON"),
-                        URLQueryItem(name: "base_date", value: baseDate),
-                        URLQueryItem(name: "base_time", value: baseTime),
-                        URLQueryItem(name: "nx", value: String(nx)),
-                        URLQueryItem(name: "ny", value: String(ny))
-                    ]
-                    observer.onNext(components)
-                }
+                arr.append(components)
+            }
+        }
+        
+        return arr
+    }
+    // URL Components
+    private func getUrls(nx: Int, ny: Int, convenience: Bool) -> Observable<URLComponents> {
+        return Observable.create { [weak self] observer in
+            guard let self = self else { return Disposables.create() }
+            
+            var components = self.urlComponent(nx: nx, ny: ny, convenience: convenience)
+            for component in components {
+                observer.onNext(component)
             }
             return Disposables.create()
         }
     }
+    // Rx+URLSession
     func getData(nx: Int, ny: Int, convenience: Bool) -> Observable<WeatherDataModel> {
-        return getUrls(convenience: convenience, nx: nx, ny: ny)
+        return getUrls(nx: nx, ny: ny, convenience: convenience)
+            .share()
             .map{ url in
                 return URLRequest(url: url.url!)
             }
