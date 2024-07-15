@@ -82,7 +82,9 @@ extension ViewController {
         self.navigationController?.navigationBar.isTranslucent = true
         self.navigationItem.hidesSearchBarWhenScrolling = false
         self.navigationItem.title = "날씨"
-        self.navigationItem.searchController = SearchResultViewController()
+        let searchController = SearchResultViewController()
+        searchController.searchResultVCDelegate = self
+        self.navigationItem.searchController = searchController
     }
     private func addViews() {
         view.addSubview(collectionView)

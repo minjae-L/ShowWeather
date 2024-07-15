@@ -22,6 +22,7 @@ class SearchResultViewController: UISearchController {
         let vm = SearchResultViewModel()
         return vm
     }()
+    weak var searchResultVCDelegate: SearchResultViewControllerDelegate?
     private lazy var searchCompleter: MKLocalSearchCompleter? = {
         let completer = MKLocalSearchCompleter()
         completer.region = self.searchRegion
@@ -43,6 +44,13 @@ class SearchResultViewController: UISearchController {
         super.viewDidLoad()
         addViews()
         configureLayout()
+        
+        // UISearchController dismiss시 값 초기화
+        self.rx.didDismiss
+            .subscribe(onNext: { [weak self] in
+                self?.viewModel.removeAllElements()
+            })
+            .disposed(by: disposeBag)
         
         // UISearchResultsUpdating 바인딩
         self.rx.searchPhrase
@@ -74,6 +82,7 @@ class SearchResultViewController: UISearchController {
                       let suggestion = self.completerResults?[indexPath.row] else { return }
                 let vm = WeatherViewModel(address: viewModel.element.value[indexPath.row].addressLabel, completion: suggestion)
                 let vc = WeatherViewController(viewModel: vm)
+                vc.delegate = self
                 let navigationController = UINavigationController(rootViewController: vc)
                 self.present(navigationController, animated: true)
             })
@@ -84,6 +93,12 @@ class SearchResultViewController: UISearchController {
 extension SearchResultViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return UITableView.automaticDimension
+    }
+}
+extension SearchResultViewController: WeatherViewControllerDelegate {
+    func addButtonTapped(data: LocationWeatherDataModel) {
+        self.dismiss(animated: false)
+        searchResultVCDelegate?.didTappedAddButtonFromWeatherVC(data: data)
     }
 }
 
