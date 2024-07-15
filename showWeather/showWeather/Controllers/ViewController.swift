@@ -41,7 +41,7 @@ class ViewController: UIViewController {
     }
 }
 
-// MARK: UICollectionView Delegate, DataSource, FlowLayoutDelegate
+// MARK: UICollectionView Delegate, FlowLayoutDelegate
 extension ViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = self.view.frame.width
@@ -82,12 +82,7 @@ extension ViewController {
         self.navigationController?.navigationBar.isTranslucent = true
         self.navigationItem.hidesSearchBarWhenScrolling = false
         self.navigationItem.title = "날씨"
-        let resultViewController = SearchResultViewController()
-        resultViewController.delegate = self
-        let searchController = UISearchController(searchResultsController: resultViewController)
-        searchController.delegate = resultViewController
-        searchController.searchResultsUpdater = resultViewController
-        self.navigationItem.searchController = searchController
+        self.navigationItem.searchController = SearchResultViewController()
     }
     private func addViews() {
         view.addSubview(collectionView)

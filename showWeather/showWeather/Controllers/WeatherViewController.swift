@@ -118,8 +118,6 @@ class WeatherViewController: UIViewController {
             .observe(on: MainScheduler.instance)
             .asObservable()
             .subscribe(onNext: { [weak self] model in
-                print("viewModel bind")
-                print("model: \(model)")
                 self?.configureTexts(model: model)
             })
             .disposed(by: disposeBag)

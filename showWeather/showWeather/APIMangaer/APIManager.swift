@@ -109,6 +109,7 @@ class APIManager {
     // Rx+URLSession
     func getData(nx: Int, ny: Int, convenience: Bool) -> Observable<WeatherDataModel> {
         return getUrls(nx: nx, ny: ny, convenience: convenience)
+            .debug("getData")
             .share()
             .map{ url in
                 return URLRequest(url: url.url!)
