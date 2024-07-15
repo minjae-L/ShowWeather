@@ -7,6 +7,8 @@
 
 import Foundation
 import MapKit
+import RxSwift
+import RxCocoa
 
 // 셀 자동완성 검색을 위한 Delegate
 protocol SearchResultViewModelDelegate: AnyObject {
@@ -14,17 +16,9 @@ protocol SearchResultViewModelDelegate: AnyObject {
 }
 class SearchResultViewModel {
     weak var delegate: SearchResultViewModelDelegate?
-    private(set) var elements: [SearchDataModel] = [] {
-        didSet {
-            delegate?.didChangedElements()
-        }
-    }
-    init() {
-        print("SRVM init")
-    }
-    var elementsCount: Int {
-        return self.elements.count
-    }
+    
+    private(set) var element = BehaviorRelay<[SearchDataModel]>(value: [])
+    
 //    데이터모델 형식에 맞춰서 변환
     func fetchData(_ arr: [MKLocalSearchCompletion]?) {
         guard let data = arr else { return }
@@ -32,9 +26,9 @@ class SearchResultViewModel {
         for element in data {
             converted.append(SearchDataModel(addressLabel: element.title, detailAddressLabel: element.subtitle))
         }
-        elements = converted
+        element.accept(converted)
     }
     func removeAllElements() {
-        self.elements.removeAll()
+        self.element.accept([])
     }
 }
