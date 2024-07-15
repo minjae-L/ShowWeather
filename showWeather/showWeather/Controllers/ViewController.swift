@@ -10,9 +10,9 @@ import RxSwift
 import RxCocoa
 
 class ViewController: UIViewController {
+    //    MARK: Property
     private let viewModel = ViewModel()
     private let disposeBag = DisposeBag()
-//    MARK: UI Property
     private lazy var collectionView: UICollectionView = {
         let flowlayout = UICollectionViewFlowLayout()
         flowlayout.scrollDirection = .vertical
@@ -24,6 +24,8 @@ class ViewController: UIViewController {
         
         return cv
     }()
+    
+    // MARK: viewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         configureNavigationBar()
@@ -38,6 +40,22 @@ class ViewController: UIViewController {
                 cell.configure(model: model)
             }
             .disposed(by: disposeBag)
+        
+        collectionView.rx.itemSelected
+            .subscribe(onNext: { [weak self] indexPath in
+                guard let data = self?.viewModel.savedWeather.value[indexPath.row] else { return }
+                self?.moveToWeatherVC(data: data)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func moveToWeatherVC(data: LocationWeatherDataModel) {
+        guard let nx = Int(data.location.nx),
+              let ny = Int(data.location.ny) else { return }
+        let vm = WeatherViewModel(address: data.address, completion: nil)
+        let vc = WeatherViewController(viewModel: vm)
+        vc.viewModel?.fetchDataFromViewController(nx: nx, ny: ny)
+        self.present(vc, animated: true)
     }
 }
 
@@ -50,16 +68,6 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDelegateFlow
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         return UIEdgeInsets(top: 15, left: 0, bottom: 15, right: 0)
     }
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let data = viewModel.savedWeather.value[indexPath.row]
-        let nx = Int(data.location.nx)!
-        let ny = Int(data.location.ny)!
-        let vm = WeatherViewModel(address: data.address, completion: nil)
-        let vc = WeatherViewController(viewModel: vm)
-        vc.viewModel?.fetchDataFromViewController(nx: nx, ny: ny)
-        self.present(vc, animated: true)
-    }
-    
 }
 
 // MARK: - SearchResultViewControllerDelegate
