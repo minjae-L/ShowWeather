@@ -45,8 +45,8 @@ class SearchResultViewController: UISearchController {
         addViews()
         configureLayout()
         
-        // UISearchController dismiss시 값 초기화
-        self.rx.didDismiss
+        // UISearchController willPresent시 값 초기화
+        self.rx.willPresent
             .subscribe(onNext: { [weak self] in
                 self?.viewModel.removeAllElements()
             })
@@ -69,7 +69,7 @@ class SearchResultViewController: UISearchController {
         // 위 바인딩에서 실행된 fetchData에 의해 데이터모델이 변경되고 변경된 모델에 맞춰서 tableViewCell과 바인딩
         viewModel.element
             .observe(on: MainScheduler.instance)
-            .debug("viewModel.obs")
+            .debug("viewModel.element")
             .bind(to: tableView.rx.items(cellIdentifier: SearchResultTableViewCell.identifier, cellType: SearchResultTableViewCell.self)) { index, element, cell in
                 cell.configure(model: element)
             }
