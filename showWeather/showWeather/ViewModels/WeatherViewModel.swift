@@ -105,35 +105,58 @@ class WeatherViewModel {
             let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
             self.selectedLocation = (nx: String(location.x), ny: String(location.y))
             // Rx+URLSesison을 통한 네트워크 통신
-            for i in 1...2 {
-                APIManager.shared.fetchData(nx: location.x, ny: location.y, page: i)
-                    .subscribe {[weak self] event in
-                        switch event {
+            let single1 = APIManager.shared.fetchData(nx: location.x, ny: location.y, page: 1)
+            let single2 = APIManager.shared.fetchData(nx: location.x, ny: location.y, page: 2)
+            
+            let zippedSingle = Single.zip(single1, single2)
+            zippedSingle
+                .subscribe {[weak self] event in
+                    switch event {
+                    case .success((let result1, let result2)):
+                        switch result1 {
                         case .success(let data):
-                            print(data)
                             self?.convertDataFromCategory(response: data)
                         case .failure(let error):
-                            print(error)
+                            print("page 1 error:\(error)")
                         }
+                        switch result2 {
+                        case .success(let data):
+                            self?.convertDataFromCategory(response: data)
+                        case .failure(let error):
+                            print("page 2 error:\(error)")
+                        }
+                    case .failure(let error):
+                        print("zipped single fail\(error)")
                     }
-                    .disposed(by: disposeBag)
-            }
+                }
             
         }
     }
     
     func fetchDataFromViewController(nx: Int, ny: Int) {
-        for i in 1...2 {
-            APIManager.shared.fetchData(nx: nx, ny: ny, page: i)
-                .subscribe {[weak self] event in
-                    switch event {
+        let single1 = APIManager.shared.fetchData(nx: nx, ny: ny, page: 1)
+        let single2 = APIManager.shared.fetchData(nx: nx, ny: ny, page: 2)
+        
+        let zippedSingle = Single.zip(single1, single2)
+        zippedSingle
+            .subscribe{[weak self] event in
+                switch event {
+                case .success((let result1, let result2)):
+                    switch result1 {
                     case .success(let data):
                         self?.convertDataFromCategory(response: data)
                     case .failure(let error):
-                        print(error)
+                        print("page 1 error:\(error)")
                     }
+                    switch result2 {
+                    case .success(let data):
+                        self?.convertDataFromCategory(response: data)
+                    case .failure(let error):
+                        print("page 2 error:\(error)")
+                    }
+                case .failure(let error):
+                    print("zipped single fail\(error)")
                 }
-                .disposed(by: disposeBag)
-        }
+            }
     }
 }
