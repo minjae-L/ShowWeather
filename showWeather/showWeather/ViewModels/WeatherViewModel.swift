@@ -105,23 +105,35 @@ class WeatherViewModel {
             let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
             self.selectedLocation = (nx: String(location.x), ny: String(location.y))
             // Rx+URLSesison을 통한 네트워크 통신
-            APIManager.shared.getData(nx: location.x, ny: location.y, convenience: false)
-                .share(replay: 1,scope: .whileConnected)
-                .subscribe{[weak self] data in
-                    print("WeatherVM Rx Subscribe::")
-                    guard let element = data.element else { return }
-                    self?.convertDataFromCategory(response: element)
-                }
-                .disposed(by: self.disposeBag)
-
+            for i in 1...2 {
+                APIManager.shared.fetchData(nx: location.x, ny: location.y, page: i)
+                    .subscribe {[weak self] event in
+                        switch event {
+                        case .success(let data):
+                            print(data)
+                            self?.convertDataFromCategory(response: data)
+                        case .failure(let error):
+                            print(error)
+                        }
+                    }
+                    .disposed(by: disposeBag)
+            }
+            
         }
     }
     
     func fetchDataFromViewController(nx: Int, ny: Int) {
-        APIManager.shared.getData(nx: nx, ny: ny, convenience: false)
-            .subscribe{ [weak self] data in
-                self?.convertDataFromCategory(response: data)
-            }
-            .disposed(by: disposeBag)
+        for i in 1...2 {
+            APIManager.shared.fetchData(nx: nx, ny: ny, page: i)
+                .subscribe {[weak self] event in
+                    switch event {
+                    case .success(let data):
+                        self?.convertDataFromCategory(response: data)
+                    case .failure(let error):
+                        print(error)
+                    }
+                }
+                .disposed(by: disposeBag)
+        }
     }
 }

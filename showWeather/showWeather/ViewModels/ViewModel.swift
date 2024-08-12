@@ -23,16 +23,17 @@ class ViewModel {
     func saveData(model: LocationWeatherDataModel) {
         let nx = Int(model.location.nx)!
         let ny = Int(model.location.ny)!
-        APIManager.shared.getData(nx: nx, ny: ny, convenience: true)
-            .asObservable()
-            .map { [weak self] data in
-                return LocationWeatherDataModel(address: model.address,
-                                                location: model.location,
-                                                savedDataModel: self?.convertData(address: model.address, data: data))
-            }
-            .subscribe{ [weak self] data in
-                guard let element = data.element else { return }
-                self?.saved.append(element)
+        APIManager.shared.fetchData(nx: nx, ny: ny, page: 1)
+            .subscribe { [weak self] event in
+                switch event {
+                case .success(let data):
+                    let data = self?.convertData(address: model.address, data: data)
+                    self?.saved.append(LocationWeatherDataModel(address: model.address,
+                                                                location: model.location,
+                                                                savedDataModel: data))
+                case .failure(let error):
+                    print(error)
+                }
             }
             .disposed(by: disposeBag)
     }
