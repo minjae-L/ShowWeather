@@ -17,6 +17,13 @@ struct LatXLngY {
     public var y: Int
     
 }
+enum NetworkError: Error {
+    case invalidUrl
+    case transportError
+    case serverError(code: Int)
+    case missingData
+    case decodingError
+}
 
 // APIManager: Rx+URLSession, 위도경도변환함수
 class APIManager {
@@ -33,96 +40,87 @@ class APIManager {
         }
         return dictionary["ApiKey"] as! String
     }()
-    
-    // MARK: Rx+URLSession
-    private func currentDate() -> (baseDate: String, baseTime: String){
+    // 현재시간
+    private var currentTime: (baseDate: String, baseTime: String) {
         let now = Date()
         let before = Calendar.current.date(byAdding: .minute, value: -30, to: now)!
         let dateFormatter = DateFormatter()
-        let timeFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd"
-        timeFormatter.dateFormat = "HHmm"
         let baseDate = dateFormatter.string(from: now)
-        let baseTime = timeFormatter.string(from: before)
+        dateFormatter.dateFormat = "HHmm"
+        let baseTime = dateFormatter.string(from: before)
         
         return (baseDate, baseTime)
     }
-    
-    private func urlComponent(nx: Int, ny: Int, convenience: Bool) -> [URLComponents] {
+    // URL Components
+    private func component(nx: Int, ny: Int, page: Int) -> URLComponents {
         let scheme = "https"
         let host = "apis.data.go.kr"
         let path = "/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst"
         
-        var arr = [URLComponents]()
         var components = URLComponents()
         components.scheme = scheme
         components.host = host
         components.path = path
         
-        let baseDate = self.currentDate().baseDate
-        let baseTime = self.currentDate().baseTime
+        components.percentEncodedQueryItems = [
+            URLQueryItem(name: "serviceKey", value: APIKEY),
+            URLQueryItem(name: "numOfRows", value: "30"),
+            URLQueryItem(name: "pageNo", value: String(page)),
+            URLQueryItem(name: "dataType", value: "JSON"),
+            URLQueryItem(name: "base_date", value: self.currentTime.baseDate),
+            URLQueryItem(name: "base_time", value: self.currentTime.baseTime),
+            URLQueryItem(name: "nx", value: String(nx)),
+            URLQueryItem(name: "ny", value: String(ny))
+        ]
         
-        // convenience true: URLSession 한번 통신, false: 두번 통신
-        if convenience {
-            components.percentEncodedQueryItems = [
-                URLQueryItem(name: "serviceKey", value: APIKEY),
-                URLQueryItem(name: "numOfRows", value: "30"),
-                URLQueryItem(name: "pageNo", value: "1"),
-                URLQueryItem(name: "dataType", value: "JSON"),
-                URLQueryItem(name: "base_date", value: baseDate),
-                URLQueryItem(name: "base_time", value: baseTime),
-                URLQueryItem(name: "nx", value: String(nx)),
-                URLQueryItem(name: "ny", value: String(ny))
-            ]
-            arr.append(components)
-        } else {
-            // 총 데이터수는 60개지만 1회호출로 가져올 수 있는 데이터의 최대갯수는 50개이므로 두번 걸쳐서 받기위해 URLComponents를 배열로 담아서 리턴
-            for i in 1...2 {
-                components.percentEncodedQueryItems = [
-                    URLQueryItem(name: "serviceKey", value: APIKEY),
-                    URLQueryItem(name: "numOfRows", value: "30"),
-                    URLQueryItem(name: "pageNo", value: String(i)),
-                    URLQueryItem(name: "dataType", value: "JSON"),
-                    URLQueryItem(name: "base_date", value: baseDate),
-                    URLQueryItem(name: "base_time", value: baseTime),
-                    URLQueryItem(name: "nx", value: String(nx)),
-                    URLQueryItem(name: "ny", value: String(ny))
-                ]
-                arr.append(components)
-            }
-        }
-        
-        return arr
+        return components
     }
-    // URL Components
-    private func getUrls(nx: Int, ny: Int, convenience: Bool) -> Observable<URLComponents> {
-        return Observable.create { [weak self] observer in
-            guard let self = self else { return Disposables.create() }
-            
-            var components = self.urlComponent(nx: nx, ny: ny, convenience: convenience)
-            for component in components {
-                observer.onNext(component)
+    // MARK: Rx+URLSession
+    typealias NetworkResult = Result<WeatherDataModel, NetworkError>
+    func fetchData(nx: Int, ny: Int, page: Int) -> Single<NetworkResult> {
+        return Single<NetworkResult>.create {[weak self] single in
+            // URL 확인
+            guard let components = self?.component(nx: nx, ny: ny, page: page) else {
+                single(.failure(NetworkError.invalidUrl))
+                return Disposables.create()
             }
+            
+            let request = URLRequest(url: components.url!)
+            
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                // 에러 확인
+                if let error = error {
+                    single(.failure(NetworkError.transportError))
+                    return
+                }
+                
+                let successRange = 200..<300
+                guard let statusCode = (response as? HTTPURLResponse)?.statusCode else { return }
+                // 접속 코드 확인
+                if !successRange.contains(successRange) {
+                    single(.failure(NetworkError.serverError(code: statusCode)))
+                    return
+                }
+                // 데이터 확인
+                guard let loaded = data else {
+                    single(.failure(NetworkError.missingData))
+                    return
+                }
+                // 디코딩 확인
+                do {
+                    let decoded = try JSONDecoder().decode(WeatherDataModel.self, from: loaded)
+                    single(.success(NetworkResult.success(decoded)))
+                } catch {
+                    single(.failure(NetworkError.decodingError))
+                }
+            }.resume()
+            
+            
             return Disposables.create()
         }
     }
-    // Rx+URLSession
-    func getData(nx: Int, ny: Int, convenience: Bool) -> Observable<WeatherDataModel> {
-        return getUrls(nx: nx, ny: ny, convenience: convenience)
-            .debug("getData")
-            .share()
-            .map{ url in
-                return URLRequest(url: url.url!)
-            }
-            .flatMap { request -> Observable<(response: HTTPURLResponse, data: Data)> in
-                return URLSession.shared.rx.response(request: request)
-            }.share()
-            .map{ _, data -> WeatherDataModel in
-                let decoder = JSONDecoder()
-                let decoded = try? decoder.decode(WeatherDataModel.self, from: data)
-                return decoded ?? WeatherDataModel(response: DataResponse(header: ResponseHeader(resultCode: "04"), body: nil))
-            }
-    }
+
     
     // MARK: - 위도 경도 변환함수
     func convertGRID_GPS(mode: Int, lat_X: Double, lng_Y: Double) -> LatXLngY {
@@ -206,3 +204,6 @@ class APIManager {
 
 
 }
+
+
+
