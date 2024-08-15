@@ -7,24 +7,15 @@
 
 import Foundation
 import MapKit
-
-protocol WeatherViewModelDelegate: AnyObject {
-    func didUpdatedElements()
-}
+import RxSwift
+import RxCocoa
 
 class WeatherViewModel {
-    var elements: [WeatherModel] = [] {
-        didSet {
-            print("WVM:: elements didSet")
-            var allLoaded = false
-            if elements[0].wind != nil {
-                delegate?.didUpdatedElements()
-            }
-        }
-    }
-    init() {
-        
-    }
+    var elements: [WeatherModel] = []
+    let disposeBag = DisposeBag()
+    var element = BehaviorRelay<[WeatherModel]>(value: [])
+    
+    init() { }
     convenience init(address: String, completion: MKLocalSearchCompletion?) {
         print("WVM:: convenience init")
         self.init()
@@ -32,7 +23,6 @@ class WeatherViewModel {
         guard let completion = completion else { return }
         self.search(for: completion)
     }
-    weak var delegate: WeatherViewModelDelegate?
     var address: String = ""
     private var selectedLocation: (nx: String, ny: String)?
     // 날짜를 문자열 형식으로 변환
@@ -86,11 +76,12 @@ class WeatherViewModel {
             if idx > 5 { idx = 0 }
         }
         self.elements = converted
+        self.element.accept(converted)
     }
     func getLocationDataModel() -> LocationWeatherDataModel? {
         guard let location = self.selectedLocation else { return nil }
         let address = self.address
-        return LocationWeatherDataModel(address: address, location: location)
+        return LocationWeatherDataModel(address: address, location: location, savedDataModel: nil)
     }
     // MKLocalSearchRequest 생성 -> 선택된 지역의 정보 가져오기(위도,경도)
     func search(for suggestedCompletion: MKLocalSearchCompletion) {
@@ -101,57 +92,71 @@ class WeatherViewModel {
         searchRequest.region = MKCoordinateRegion(MKMapRect.world)
         searchRequest.resultTypes = .address
         let localSearch = MKLocalSearch(request: searchRequest)
-        localSearch.start { (response, error) in
+        localSearch.start { [weak self] (response, error) in
             guard error == nil else {
                 print("searchError")
                 print(error?.localizedDescription)
                 return
             }
+            guard let self = self else { return }
             let places = response?.mapItems[0]
-            print(places?.placemark.coordinate)
             guard let lati = places?.placemark.coordinate.latitude, let long = places?.placemark.coordinate.longitude else { return }
             // 불러온 위도 경도를 x좌표,y좌표로 변환
             let location: LatXLngY = APIManager.shared.convertGRID_GPS(mode: 0, lat_X: lati, lng_Y: long)
             self.selectedLocation = (nx: String(location.x), ny: String(location.y))
-            print("converted: \(location)")
-            // URLSesison을 통한 네트워크 통신
-            APIManager.shared.dataFetch(nx: location.x, ny: location.y, convenience: false) {[weak self] result in
-                guard let self = self else { return }
-                switch result {
-                case .success(let data):
-                    self.convertDataFromCategory(response: data)
-                case .failure(.decodingError(error: let error)):
-                    print("decodingError: \(error.localizedDescription)")
-                case .failure(.invalidUrl):
-                    print("invalidURL")
-                case .failure(.missingData):
-                    print("missingData")
-                case .failure(.serverError(code: let code)):
-                    print("serverError \(code)")
-                case .failure(.transportError):
-                    print("transportError")
+            // Rx+URLSesison을 통한 네트워크 통신
+            let single1 = APIManager.shared.fetchData(nx: location.x, ny: location.y, page: 1)
+            let single2 = APIManager.shared.fetchData(nx: location.x, ny: location.y, page: 2)
+            
+            let zippedSingle = Single.zip(single1, single2)
+            zippedSingle
+                .subscribe {[weak self] event in
+                    switch event {
+                    case .success((let result1, let result2)):
+                        switch result1 {
+                        case .success(let data):
+                            self?.convertDataFromCategory(response: data)
+                        case .failure(let error):
+                            print("page 1 error:\(error)")
+                        }
+                        switch result2 {
+                        case .success(let data):
+                            self?.convertDataFromCategory(response: data)
+                        case .failure(let error):
+                            print("page 2 error:\(error)")
+                        }
+                    case .failure(let error):
+                        print("zipped single fail\(error)")
+                    }
                 }
-            }
+            
         }
     }
     
     func fetchDataFromViewController(nx: Int, ny: Int) {
-        APIManager.shared.dataFetch(nx: nx, ny: ny, convenience: false) {[weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let data):
-                self.convertDataFromCategory(response: data)
-            case .failure(.decodingError(error: let error)):
-                print("decodingError: \(error.localizedDescription)")
-            case .failure(.invalidUrl):
-                print("invalidURL")
-            case .failure(.missingData):
-                print("missingData")
-            case .failure(.serverError(code: let code)):
-                print("serverError \(code)")
-            case .failure(.transportError):
-                print("transportError")
+        let single1 = APIManager.shared.fetchData(nx: nx, ny: ny, page: 1)
+        let single2 = APIManager.shared.fetchData(nx: nx, ny: ny, page: 2)
+        
+        let zippedSingle = Single.zip(single1, single2)
+        zippedSingle
+            .subscribe{[weak self] event in
+                switch event {
+                case .success((let result1, let result2)):
+                    switch result1 {
+                    case .success(let data):
+                        self?.convertDataFromCategory(response: data)
+                    case .failure(let error):
+                        print("page 1 error:\(error)")
+                    }
+                    switch result2 {
+                    case .success(let data):
+                        self?.convertDataFromCategory(response: data)
+                    case .failure(let error):
+                        print("page 2 error:\(error)")
+                    }
+                case .failure(let error):
+                    print("zipped single fail\(error)")
+                }
             }
-        }
     }
 }

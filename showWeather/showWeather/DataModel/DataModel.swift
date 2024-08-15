@@ -10,6 +10,7 @@ import Foundation
 struct LocationWeatherDataModel {
     let address: String
     let location: (nx: String, ny: String)
+    let savedDataModel: SavedWeatherDataModel?
 }
 struct SavedWeatherDataModel {
     let address: String

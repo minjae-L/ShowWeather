@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import RxSwift
+import RxCocoa
 
 // 위도 경도 변환 데이터 모델
 struct LatXLngY {
@@ -15,130 +17,112 @@ struct LatXLngY {
     public var y: Int
     
 }
-
-// URLSession NetworkError
 enum NetworkError: Error {
     case invalidUrl
     case transportError
     case serverError(code: Int)
     case missingData
-    case decodingError(error: Error)
+    case decodingError
 }
 
-// APIManager: URLSession, 위도경도변환함수
+// APIManager: Rx+URLSession, 위도경도변환함수
 class APIManager {
     static let shared = APIManager()
     init() {}
-
-    // 변환된 x,y좌표의 url파싱
-    private func getUrl(convenience: Bool, nx: Int, ny: Int) -> [URLComponents] {
+    private let disposeBag = DisposeBag()
+    private let session = URLSession(configuration: .default)
+    private let APIKEY: String = {
+        guard let url = Bundle.main.url(forResource: "Info", withExtension: "plist"),
+              let dictionary = NSDictionary(contentsOf: url)
+        else {
+            print("Error:: api key doesn't loaded")
+            return ""
+        }
+        return dictionary["ApiKey"] as! String
+    }()
+    // 현재시간
+    private var currentTime: (baseDate: String, baseTime: String) {
+        let now = Date()
+        let before = Calendar.current.date(byAdding: .minute, value: -30, to: now)!
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd"
+        let baseDate = dateFormatter.string(from: now)
+        dateFormatter.dateFormat = "HHmm"
+        let baseTime = dateFormatter.string(from: before)
+        
+        return (baseDate, baseTime)
+    }
+    // URL Components
+    private func component(nx: Int, ny: Int, page: Int) -> URLComponents {
         let scheme = "https"
         let host = "apis.data.go.kr"
         let path = "/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst"
         
-        var arr = [URLComponents]()
         var components = URLComponents()
         components.scheme = scheme
         components.host = host
         components.path = path
         
-        // 현재날짜와 시간 구하기
-        let now = Date()
-        let before = Calendar.current.date(byAdding: .minute, value: -30, to: now)!
-        let dateFormatter = DateFormatter()
-        let timeFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyyMMdd"
-        timeFormatter.dateFormat = "HHmm"
-        let baseDate = dateFormatter.string(from: now)
-        let baseTime = timeFormatter.string(from: before)
-        print("current: \(dateFormatter.string(from: now))")
-        print("current: \(timeFormatter.string(from: before))")
+        components.percentEncodedQueryItems = [
+            URLQueryItem(name: "serviceKey", value: APIKEY),
+            URLQueryItem(name: "numOfRows", value: "30"),
+            URLQueryItem(name: "pageNo", value: String(page)),
+            URLQueryItem(name: "dataType", value: "JSON"),
+            URLQueryItem(name: "base_date", value: self.currentTime.baseDate),
+            URLQueryItem(name: "base_time", value: self.currentTime.baseTime),
+            URLQueryItem(name: "nx", value: String(nx)),
+            URLQueryItem(name: "ny", value: String(ny))
+        ]
         
-        guard let url = Bundle.main.url(forResource: "Info", withExtension: "plist") else { return []}
-        guard let dictionary = NSDictionary(contentsOf: url) else { return []}
-        
-        // convenience true: URLSession 한번 통신, false: 두번 통신
-        if convenience {
-            components.percentEncodedQueryItems = [
-                URLQueryItem(name: "serviceKey", value: dictionary["ApiKey"] as! String),
-                URLQueryItem(name: "numOfRows", value: "30"),
-                URLQueryItem(name: "pageNo", value: "1"),
-                URLQueryItem(name: "dataType", value: "JSON"),
-                URLQueryItem(name: "base_date", value: baseDate),
-                URLQueryItem(name: "base_time", value: baseTime),
-                URLQueryItem(name: "nx", value: String(nx)),
-                URLQueryItem(name: "ny", value: String(ny))
-            ]
-            arr.append(components)
-        } else {
-            // 총 데이터수는 60개지만 1회호출로 가져올 수 있는 데이터의 최대갯수는 50개이므로 두번 걸쳐서 받기위해 URLComponents를 배열로 담아서 리턴
-            for i in 1...2 {
-                components.percentEncodedQueryItems = [
-                    URLQueryItem(name: "serviceKey", value: dictionary["ApiKey"] as! String),
-                    URLQueryItem(name: "numOfRows", value: "30"),
-                    URLQueryItem(name: "pageNo", value: String(i)),
-                    URLQueryItem(name: "dataType", value: "JSON"),
-                    URLQueryItem(name: "base_date", value: baseDate),
-                    URLQueryItem(name: "base_time", value: baseTime),
-                    URLQueryItem(name: "nx", value: String(nx)),
-                    URLQueryItem(name: "ny", value: String(ny))
-                ]
-                arr.append(components)
-            }
-        }
-        
-        
-        return arr
+        return components
     }
-    
-    private let session = URLSession(configuration: .default)
-    typealias NetworkResult = (Result<WeatherDataModel, NetworkError>) -> ()
-    
-    // URLSession GET Data
-    func dataFetch(nx: Int, ny: Int, convenience: Bool, completion: @escaping NetworkResult) {
-        // URL 확인
-        let urls = getUrl(convenience: convenience, nx: nx, ny: ny)
-//        let urls = getUrl(nx: nx, ny: ny)
-        for url in urls {
-            guard let url = url.url else {
-                completion(.failure(.invalidUrl))
-                return
+    // MARK: Rx+URLSession
+    typealias NetworkResult = Result<WeatherDataModel, NetworkError>
+    func fetchData(nx: Int, ny: Int, page: Int) -> Single<NetworkResult> {
+        return Single<NetworkResult>.create {[weak self] single in
+            // URL 확인
+            guard let components = self?.component(nx: nx, ny: ny, page: page) else {
+                single(.failure(NetworkError.invalidUrl))
+                return Disposables.create()
             }
-            var request: URLRequest = URLRequest(url: url)
-            request.httpMethod = "GET"
-            print("APIManager:: URL: \(url)")
-            let dataTask = session.dataTask(with: request) { data, response, error in
-                // 연결 확인
-                guard error == nil else {
-                    completion(.failure(.transportError))
-                    print(error?.localizedDescription)
+            
+            let request = URLRequest(url: components.url!)
+            
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                // 에러 확인
+                if let error = error {
+                    single(.failure(NetworkError.transportError))
                     return
                 }
-                // 서버 확인
+                
                 let successRange = 200..<300
                 guard let statusCode = (response as? HTTPURLResponse)?.statusCode else { return }
-                if !successRange.contains(statusCode) {
-                    completion(.failure(.serverError(code: statusCode)))
+                // 접속 코드 확인
+                if !successRange.contains(successRange) {
+                    single(.failure(NetworkError.serverError(code: statusCode)))
                     return
                 }
                 // 데이터 확인
-                guard let loadData = data else {
-                    completion(.failure(.missingData))
+                guard let loaded = data else {
+                    single(.failure(NetworkError.missingData))
                     return
                 }
-                print("loadData: \(loadData)")
-                // 디코딩
+                // 디코딩 확인
                 do {
-                    let parsingData: WeatherDataModel = try
-                    JSONDecoder().decode(WeatherDataModel.self, from: loadData)
-                    completion(.success(parsingData))
-                } catch let error {
-                    completion(.failure(.decodingError(error: error)))
+                    let decoded = try JSONDecoder().decode(WeatherDataModel.self, from: loaded)
+                    single(.success(NetworkResult.success(decoded)))
+                } catch {
+                    single(.failure(NetworkError.decodingError))
                 }
             }.resume()
+            
+            
+            return Disposables.create()
         }
     }
-    // 위도 경도 변환함수
+
+    
+    // MARK: - 위도 경도 변환함수
     func convertGRID_GPS(mode: Int, lat_X: Double, lng_Y: Double) -> LatXLngY {
         let RE = 6371.00877 // 지구 반경(km)
         let GRID = 5.0 // 격자 간격(km)
@@ -220,3 +204,6 @@ class APIManager {
 
 
 }
+
+
+

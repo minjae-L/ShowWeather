@@ -6,6 +6,9 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
+
 protocol WeatherViewControllerDelegate: AnyObject {
     func addButtonTapped(data: LocationWeatherDataModel)
     
@@ -25,6 +28,7 @@ class WeatherViewController: UIViewController {
     }
     var viewModel: WeatherViewModel?
     weak var delegate: WeatherViewControllerDelegate?
+    private let disposeBag = DisposeBag()
     private let addressLabel: UILabel = {
         let lb = UILabel()
         lb.translatesAutoresizingMaskIntoConstraints = false
@@ -95,69 +99,106 @@ class WeatherViewController: UIViewController {
         cv.translatesAutoresizingMaskIntoConstraints = false
         cv.showsHorizontalScrollIndicator = false
         cv.delegate = self
-        cv.dataSource = self
         cv.register(WeatherCollectionViewCell.self, forCellWithReuseIdentifier: WeatherCollectionViewCell.identifier)
         cv.clipsToBounds = true
         cv.layer.cornerRadius = 10
         return cv
     }()
     
-//    MARK: Methods
-    private func configureNavigationBar() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "취소", image: nil, target: self, action: #selector(cancelButtonTapped))
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "추가", image: nil, target: self, action: #selector(addLocationWeather))
+    // MARK: viewDidLoad
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        addViews()
+        configureLayout()
+        configureColor()
+        configureNavigationBar()
+        
+        // UI 그리기
+        viewModel?.element
+            .observe(on: MainScheduler.instance)
+            .asObservable()
+            .subscribe(onNext: { [weak self] model in
+                self?.configureTexts(model: model)
+            })
+            .disposed(by: disposeBag)
+        
+        // CollectionView Bind
+        viewModel?.element
+            .observe(on: MainScheduler.instance)
+            .asObservable()
+            .bind(to: self.collectionView.rx.items(cellIdentifier: WeatherCollectionViewCell.identifier, cellType: WeatherCollectionViewCell.self)) { index, element, cell in
+                cell.configure(model: element)
+            }
+            .disposed(by: disposeBag)
     }
-    @objc func addLocationWeather() {
-        guard let viewModel = viewModel else { return }
-        guard let data = viewModel.getLocationDataModel() else { return }
-        delegate?.addButtonTapped(data: data)
-        self.dismiss(animated: true)
-    }
-    @objc func cancelButtonTapped() {
-        self.dismiss(animated: true)
-    }
-    private func addViews() {
-        rainStackView.addArrangedSubview(rainTypeLabel)
-        rainStackView.addArrangedSubview(rainAmountLabel)
-        humidityStackView.addArrangedSubview(windLabel)
-        humidityStackView.addArrangedSubview(humidity)
-        contentStackView.addArrangedSubview(addressLabel)
-        contentStackView.addArrangedSubview(temperatureLabel)
-        contentStackView.addArrangedSubview(skyImageView)
-        contentStackView.addArrangedSubview(rainStackView)
-        contentStackView.addArrangedSubview(humidityStackView)
-        view.addSubview(contentStackView)
-        view.addSubview(collectionView)
-    }
-    private func configureLayout() {
-        NSLayoutConstraint.activate([
-            contentStackView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 50),
-            contentStackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            contentStackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            contentStackView.bottomAnchor.constraint(equalTo: collectionView.topAnchor, constant: -20),
-            collectionView.heightAnchor.constraint(equalToConstant: 200),
-            collectionView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor,constant: 20),
-            collectionView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20),
-            collectionView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor,constant: -50),
+    
+}
 
-        ])
+// MARK: CollectionView Delegate, DataSource, DelegateFlowLayout
+extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 70, height: self.collectionView.frame.height)
     }
-    private func configureColor() {
-        self.addressLabel.textColor = UIColor(named: "LabelTextColor")
-        self.temperatureLabel.textColor = UIColor(named: "LabelTextColor")
-        self.rainTypeLabel.textColor = UIColor(named: "LabelTextColor")
-        self.rainAmountLabel.textColor = UIColor(named: "LabelTextColor")
-        self.windLabel.textColor = UIColor(named: "LabelTextColor")
-        self.humidity.textColor = UIColor(named: "LabelTextColor")
-        self.contentStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-        self.rainStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-        self.humidityStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-        self.collectionView.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
-        self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-    }
+}
+
+// MARK: UI 그리기
+extension WeatherViewController {
+    //    MARK: Methods
+        private func configureNavigationBar() {
+            self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "취소", image: nil, target: self, action: #selector(cancelButtonTapped))
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "추가", image: nil, target: self, action: #selector(addLocationWeather))
+        }
+        @objc func addLocationWeather() {
+            guard let viewModel = viewModel,
+                  let data = viewModel.getLocationDataModel() else { return }
+            delegate?.addButtonTapped(data: data)
+            self.dismiss(animated: true)
+        }
+        @objc func cancelButtonTapped() {
+            self.dismiss(animated: true)
+        }
+        private func addViews() {
+            rainStackView.addArrangedSubview(rainTypeLabel)
+            rainStackView.addArrangedSubview(rainAmountLabel)
+            humidityStackView.addArrangedSubview(windLabel)
+            humidityStackView.addArrangedSubview(humidity)
+            contentStackView.addArrangedSubview(addressLabel)
+            contentStackView.addArrangedSubview(temperatureLabel)
+            contentStackView.addArrangedSubview(skyImageView)
+            contentStackView.addArrangedSubview(rainStackView)
+            contentStackView.addArrangedSubview(humidityStackView)
+            view.addSubview(contentStackView)
+            view.addSubview(collectionView)
+        }
+        private func configureLayout() {
+            NSLayoutConstraint.activate([
+                contentStackView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 50),
+                contentStackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+                contentStackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+                contentStackView.bottomAnchor.constraint(equalTo: collectionView.topAnchor, constant: -20),
+                collectionView.heightAnchor.constraint(equalToConstant: 200),
+                collectionView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor,constant: 20),
+                collectionView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -20),
+                collectionView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor,constant: -50),
+
+            ])
+        }
+        private func configureColor() {
+            self.addressLabel.textColor = UIColor(named: "LabelTextColor")
+            self.temperatureLabel.textColor = UIColor(named: "LabelTextColor")
+            self.rainTypeLabel.textColor = UIColor(named: "LabelTextColor")
+            self.rainAmountLabel.textColor = UIColor(named: "LabelTextColor")
+            self.windLabel.textColor = UIColor(named: "LabelTextColor")
+            self.humidity.textColor = UIColor(named: "LabelTextColor")
+            self.contentStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+            self.rainStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+            self.humidityStackView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+            self.collectionView.backgroundColor = UIColor(named: "CollectionViewCellBackgroundColor")
+            self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+        }
     // 날씨 정보로 UI 그리기
-    private func configureTexts() {
-        guard let element = viewModel?.elements.first,
+    private func configureTexts(model: [WeatherModel]) {
+        guard let element = model.first,
               let windLabel = element.wind,
               let humidityLabel = element.humidity,
               let tempText = element.temp
@@ -222,46 +263,5 @@ class WeatherViewController: UIViewController {
         
         // 습도 라벨
         self.humidity.text = "습도: \(humidityLabel)%"
-    }
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        addViews()
-        configureLayout()
-        configureColor()
-        configureNavigationBar()
-        viewModel?.delegate = self
-        print("WVC viewDidLoad")
-    }
-    
-}
-
-// MARK: CollectionView Delegate, DataSource, DelegateFlowLayout
-extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel?.elements.count ?? 0
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: WeatherCollectionViewCell.identifier,
-                                                            for: indexPath)
-                                                            as? WeatherCollectionViewCell else
-                                                            { return UICollectionViewCell() }
-        guard let viewModel = viewModel else { return UICollectionViewCell() }
-        cell.configure(model: viewModel.elements[indexPath.row])
-        return cell
-    }
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 70, height: self.collectionView.frame.height)
-    }
-}
-
-// MARK: WeatherViewModelDelegate
-extension WeatherViewController: WeatherViewModelDelegate {
-    func didUpdatedElements() {
-        print("WVMD:: didUpdatedElements")
-        DispatchQueue.main.async {
-            self.configureTexts()
-            self.collectionView.reloadData()
-        }
     }
 }

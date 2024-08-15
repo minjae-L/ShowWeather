@@ -7,129 +7,116 @@
 
 import UIKit
 import MapKit
+import RxSwift
+import RxCocoa
+
 protocol SearchResultViewControllerDelegate: AnyObject {
     func didTappedAddButtonFromWeatherVC(data: LocationWeatherDataModel)
 }
-class SearchResultViewController: UIViewController {
+
+class SearchResultViewController: UISearchController {
+    
+    //    MARK: Property
+    private let disposeBag = DisposeBag()
     private lazy var viewModel: SearchResultViewModel = {
         let vm = SearchResultViewModel()
-        vm.delegate = self
         return vm
     }()
+    weak var searchResultVCDelegate: SearchResultViewControllerDelegate?
     private lazy var searchCompleter: MKLocalSearchCompleter? = {
         let completer = MKLocalSearchCompleter()
-        completer.delegate = self
         completer.region = self.searchRegion
         return completer
     }()
-    private let searchRegion: MKCoordinateRegion = MKCoordinateRegion(MKMapRect.world)
+    private let searchRegion = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 37.5666791, longitude: 126.9782914), span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5))
     private var completerResults: [MKLocalSearchCompletion]?
-    weak var delegate: SearchResultViewControllerDelegate?
-//    MARK: UI Property
     private lazy var tableView: UITableView = {
         let tv = UITableView()
-        tv.dataSource = self
         tv.delegate = self
         tv.translatesAutoresizingMaskIntoConstraints = false
         tv.register(SearchResultTableViewCell.self, forCellReuseIdentifier: SearchResultTableViewCell.identifier)
         tv.estimatedRowHeight = 50
         return tv
     }()
-//    MARK: Methods
-    private func addViews() {
-        self.view.addSubview(tableView)
-    }
-    private func configureLayout() {
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: self.view.topAnchor),
-            tableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-            tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-        ])
-    }
-    private func configureColor() {
-        self.tableView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-        self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
-    }
+    
+   // MARK: ViewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         addViews()
         configureLayout()
-        print("SearchResultViewController ViewdidLoad")
+        
+        // UISearchController willPresent시 값 초기화
+        self.rx.willPresent
+            .subscribe(onNext: { [weak self] in
+                self?.viewModel.removeAllElements()
+            })
+            .disposed(by: disposeBag)
+        
+        // UISearchResultsUpdating 바인딩
+        self.rx.searchPhrase
+            .bind(to: searchCompleter!.rx.queryFragment)
+            .disposed(by: disposeBag)
+        
+        // UISearchResultsUpdating가 바인딩되어 값이 변경될 시 구독칸의 함수가 실행됨
+        searchCompleter!.rx.didUpdateResults
+            .debug("searchCompleter")
+            .subscribe {[weak self] completer in
+                self?.completerResults = completer.element?.results
+                self?.viewModel.fetchData(completer.element?.results)
+            }
+            .disposed(by: disposeBag)
+        
+        // 위 바인딩에서 실행된 fetchData에 의해 데이터모델이 변경되고 변경된 모델에 맞춰서 tableViewCell과 바인딩
+        viewModel.element
+            .observe(on: MainScheduler.instance)
+            .debug("viewModel.element")
+            .bind(to: tableView.rx.items(cellIdentifier: SearchResultTableViewCell.identifier, cellType: SearchResultTableViewCell.self)) { index, element, cell in
+                cell.configure(model: element)
+            }
+            .disposed(by: disposeBag)
+        
+        // tableViewCell 선택시 해당 값을 받고 WeatherViewController 이동
+        tableView.rx.itemSelected
+            .subscribe(onNext: {[weak self] indexPath in
+                guard let self = self,
+                      let suggestion = self.completerResults?[indexPath.row] else { return }
+                let vm = WeatherViewModel(address: viewModel.element.value[indexPath.row].addressLabel, completion: suggestion)
+                let vc = WeatherViewController(viewModel: vm)
+                vc.delegate = self
+                let navigationController = UINavigationController(rootViewController: vc)
+                self.present(navigationController, animated: true)
+            })
+            .disposed(by: disposeBag)
     }
 }
-// MARK: TableView Delegate, Datasource
-extension SearchResultViewController: UITableViewDelegate, UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.elementsCount
-    }
+// MARK: TableView Delegate
+extension SearchResultViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return UITableView.automaticDimension
     }
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: SearchResultTableViewCell.identifier, for: indexPath) as? SearchResultTableViewCell else { return UITableViewCell()}
-        cell.configure(model: viewModel.elements[indexPath.row])
-        cell.backgroundColor = UIColor(named: "TableViewCellBackgroundColor")
-        return cell
-    }
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        guard let suggestion = completerResults?[indexPath.row] else { return }
-        let vm = WeatherViewModel(address: viewModel.elements[indexPath.row].addressLabel, completion: suggestion)
-        let vc = WeatherViewController(viewModel: vm)
-        let navigationController = UINavigationController(rootViewController: vc)
-        vc.delegate = self
-        self.present(navigationController, animated: true)
-    }
-    
 }
-// MARK: UISearchController:: UISearchResultsUpdating
-extension SearchResultViewController: UISearchResultsUpdating {
-    func updateSearchResults(for searchController: UISearchController) {
-        guard let text = searchController.searchBar.text else { return }
-        print("SRVC:: text: \(text)")
-        if text == "" {
-            completerResults = nil
-        }
-        searchCompleter?.queryFragment = text
-    }
-}
-
-extension SearchResultViewController: UISearchControllerDelegate {
-    func didDismissSearchController(_ searchController: UISearchController) {
-        completerResults = nil
-        viewModel.removeAllElements()
-        print("SearchVC dismiss")
-    }
-}
-// MARK: MKLocalSearchCompleterDelegate
-extension SearchResultViewController: MKLocalSearchCompleterDelegate {
-    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        completerResults = completer.results
-        guard let arr = completerResults else { return }
-        viewModel.fetchData(arr)
-    }
-    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        print(error.localizedDescription)
-    }
-}
-// MARK: SearchResultViewModelDelegate
-extension SearchResultViewController: SearchResultViewModelDelegate {
-    func didChangedElements() {
-        DispatchQueue.main.async {
-            self.tableView.reloadData()
-        }
-    }
-}
-
 extension SearchResultViewController: WeatherViewControllerDelegate {
     func addButtonTapped(data: LocationWeatherDataModel) {
-        print("WVC Delegate")
-        DispatchQueue.main.async {
-            self.tableView.reloadData()
-            self.dismiss(animated: false)
-        }
-        delegate?.didTappedAddButtonFromWeatherVC(data: data)
+        self.dismiss(animated: false)
+        searchResultVCDelegate?.didTappedAddButtonFromWeatherVC(data: data)
     }
 }
 
+// MARK: UI Methods
+extension SearchResultViewController {
+        private func addViews() {
+            self.view.addSubview(tableView)
+        }
+        private func configureLayout() {
+            NSLayoutConstraint.activate([
+                tableView.topAnchor.constraint(equalTo: self.view.topAnchor),
+                tableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
+                tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+                tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+            ])
+        }
+        private func configureColor() {
+            self.tableView.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+            self.view.backgroundColor = UIColor(named: "ViewControllerBackgroundColor")
+        }
+}
